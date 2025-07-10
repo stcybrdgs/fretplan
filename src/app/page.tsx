@@ -1,103 +1,318 @@
-import Image from "next/image";
+'use client'
+
+import { useState, useEffect } from 'react'
+import {
+  Menu,
+  Sun,
+  Moon,
+  Mail,
+  Plus,
+  ChevronDown,
+  ChevronRight,
+} from 'lucide-react'
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [isDarkMode, setIsDarkMode] = useState(false)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [expandedCard, setExpandedCard] = useState<string | null>('card-1')
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  // Set initial theme on component mount
+  useEffect(() => {
+    // Check if user has a saved preference or default to light
+    const savedTheme = localStorage.getItem('theme')
+    const prefersDark =
+      savedTheme === 'dark' ||
+      (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)
+
+    setIsDarkMode(prefersDark)
+    if (prefersDark) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  }, [])
+
+  const toggleTheme = () => {
+    const newDarkMode = !isDarkMode
+    setIsDarkMode(newDarkMode)
+
+    // Update the DOM immediately
+    if (newDarkMode) {
+      document.documentElement.classList.add('dark')
+      localStorage.setItem('theme', 'dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+      localStorage.setItem('theme', 'light')
+    }
+
+    console.log('Theme switched to:', newDarkMode ? 'dark' : 'light')
+    console.log(
+      'HTML class list:',
+      document.documentElement.classList.toString()
+    )
+  }
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen)
+  }
+
+  const toggleCard = (cardId: string) => {
+    setExpandedCard(expandedCard === cardId ? null : cardId)
+  }
+
+  return (
+    <div className='bg-gray-50 dark:bg-gray-900 transition-colors duration-300 min-h-screen'>
+      {/* Top Navigation */}
+      <nav className='bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 fixed w-full top-0 z-50'>
+        <div className='flex items-center justify-between max-w-7xl mx-auto'>
+          {/* Logo & Sidebar Toggle */}
+          <div className='flex items-center space-x-3'>
+            <button
+              onClick={toggleSidebar}
+              className='w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white hover:bg-primary-hover transition-colors'
+            >
+              <Menu className='w-4 h-4' />
+            </button>
+            <h1 className='text-xl font-semibold text-primary-custom'>
+              FretPlan
+            </h1>
+          </div>
+
+          {/* Right side controls */}
+          <div className='flex items-center space-x-4'>
+            {/* Theme toggle */}
+            <button
+              onClick={toggleTheme}
+              className='flex items-center space-x-2 p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors'
+            >
+              {isDarkMode ? (
+                <Sun className='w-4 h-4' />
+              ) : (
+                <Moon className='w-4 h-4' />
+              )}
+              <span className='text-sm font-medium hidden md:block'>
+                {isDarkMode ? 'Light' : 'Dark'}
+              </span>
+            </button>
+
+            {/* Contact button */}
+            <button className='flex items-center space-x-2 p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors'>
+              <Mail className='w-4 h-4' />
+              <span className='text-sm font-medium hidden md:block'>
+                Contact
+              </span>
+            </button>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+      </nav>
+
+      <div className='flex pt-16'>
+        {/* Sidebar */}
+        <aside
+          className={`w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 h-screen fixed left-0 transform transition-transform duration-300 ease-in-out z-40 ${
+            isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          } md:translate-x-0`}
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          <div className='p-4 space-y-2'>
+            <div className='text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-3 flex items-center justify-between'>
+              <span>Practice Areas</span>
+              <button className='text-gray-900 dark:text-white p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors'>
+                <Plus className='w-4 h-4' />
+              </button>
+            </div>
+
+            <a
+              href='#'
+              className='flex items-center space-x-3 text-gray-900 dark:text-white p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 bg-purple-50 dark:bg-purple-900/20 transition-colors'
+            >
+              <span className='w-2 h-2 bg-purple-600 rounded-full'></span>
+              <span>Daily Practice</span>
+            </a>
+
+            <a
+              href='#'
+              className='flex items-center space-x-3 text-gray-900 dark:text-white p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors'
+            >
+              <span className='w-2 h-2 bg-green-600 rounded-full'></span>
+              <span>Scales & Theory</span>
+            </a>
+
+            <a
+              href='#'
+              className='flex items-center space-x-3 text-gray-900 dark:text-white p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors'
+            >
+              <span className='w-2 h-2 bg-purple-600 rounded-full'></span>
+              <span>Songs & Repertoire</span>
+            </a>
+
+            <a
+              href='#'
+              className='flex items-center space-x-3 text-gray-900 dark:text-white p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors'
+            >
+              <span className='w-2 h-2 bg-orange-600 rounded-full'></span>
+              <span>Technique</span>
+            </a>
+
+            <div className='pt-4 mt-4 border-t border-gray-200 dark:border-gray-700'>
+              <div className='text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-3 flex items-center justify-between'>
+                Projects
+                <button className='text-gray-900 dark:text-white p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors'>
+                  <Plus className='w-4 h-4' />
+                </button>
+              </div>
+              <a
+                href='#'
+                className='flex items-center space-x-3 text-gray-900 dark:text-white p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 bg-purple-50 dark:bg-purple-900/20 transition-colors'
+              >
+                <span className='w-2 h-2 bg-purple-600 rounded-full'></span>
+                <span>Original #1</span>
+              </a>
+            </div>
+
+            <div className='pt-4 mt-4 border-t border-gray-200 dark:border-gray-700'>
+              <div className='text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-3'>
+                Analyze
+              </div>
+              <a
+                href='#'
+                className='flex items-center space-x-3 text-gray-900 dark:text-white p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 bg-purple-50 dark:bg-purple-900/20 transition-colors'
+              >
+                <span className='w-2 h-2 bg-purple-600 rounded-full'></span>
+                <span>Dashboard</span>
+              </a>
+            </div>
+
+            <div className='pt-4 mt-4 border-t border-gray-200 dark:border-gray-700'>
+              <div className='text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-3'>
+                Manage
+              </div>
+              <a
+                href='#'
+                className='flex items-center space-x-3 text-gray-900 dark:text-white p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 bg-purple-50 dark:bg-purple-900/20 transition-colors'
+              >
+                <span className='w-2 h-2 bg-purple-600 rounded-full'></span>
+                <span>Tags</span>
+              </a>
+            </div>
+          </div>
+        </aside>
+
+        {/* Main Content */}
+        <main className='flex-1 md:ml-64 p-6 bg-gray-50 dark:bg-gray-900 min-h-screen'>
+          <div className='max-w-4xl mx-auto'>
+            {/* Page Header */}
+            <div className='mb-6'>
+              <h2 className='text-2xl font-bold text-gray-900 dark:text-white mb-2'>
+                Daily Practice
+              </h2>
+              <p className='text-gray-600 dark:text-gray-400'>
+                Plan your practice, track your progress
+              </p>
+            </div>
+
+            {/* Add New Card Button */}
+            <div className='mb-6'>
+              <button className='bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors'>
+                <Plus className='w-4 h-4' />
+                <span>Add Practice Card</span>
+              </button>
+            </div>
+
+            {/* Practice Cards */}
+            <div className='space-y-4'>
+              {/* Expanded Card */}
+              <div className='bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm'>
+                <div
+                  className='p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 transition-colors'
+                  onClick={() => toggleCard('card-1')}
+                >
+                  <div className='flex items-center space-x-3'>
+                    <span className='w-3 h-3 bg-green-500 rounded-full'></span>
+                    <h3 className='text-lg font-medium text-gray-900 dark:text-white'>
+                      G Dominant Scale Ideas
+                    </h3>
+                  </div>
+                  {expandedCard === 'card-1' ? (
+                    <ChevronDown className='w-5 h-5 text-gray-500 dark:text-gray-400' />
+                  ) : (
+                    <ChevronRight className='w-5 h-5 text-gray-500 dark:text-gray-400' />
+                  )}
+                </div>
+
+                {expandedCard === 'card-1' && (
+                  <div className='p-4 space-y-3'>
+                    <div className='flex items-center space-x-3'>
+                      <input
+                        type='checkbox'
+                        className='w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500'
+                      />
+                      <span className='text-gray-900 dark:text-white'>
+                        Practice Dm - F - Bb - A progression
+                      </span>
+                    </div>
+                    <div className='flex items-center space-x-3'>
+                      <input
+                        type='checkbox'
+                        defaultChecked
+                        className='w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500'
+                      />
+                      <span className='text-gray-500 dark:text-gray-400 line-through'>
+                        Review tritone substitutions
+                      </span>
+                    </div>
+                    <div className='flex items-center space-x-3'>
+                      <input
+                        type='checkbox'
+                        className='w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500'
+                      />
+                      <span className='text-gray-900 dark:text-white'>
+                        Apply to "Autumn Leaves" in Bb
+                      </span>
+                    </div>
+
+                    {/* Add new task */}
+                    <div className='flex items-center space-x-2 mt-4 pt-3 border-t border-gray-200 dark:border-gray-700'>
+                      <input
+                        type='text'
+                        placeholder='Add new task...'
+                        className='flex-1 p-2 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent'
+                      />
+                      <button className='bg-primary hover:bg-primary-hover text-white px-3 py-2 rounded text-sm transition-colors'>
+                        Add
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Collapsed Card */}
+              <div className='bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm'>
+                <div
+                  className='p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-between transition-colors'
+                  onClick={() => toggleCard('card-2')}
+                >
+                  <div className='flex items-center space-x-3'>
+                    <span className='w-3 h-3 bg-purple-600 rounded-full'></span>
+                    <h3 className='text-lg font-medium text-gray-900 dark:text-white'>
+                      Autumn Leaves - Bb & G Major
+                    </h3>
+                  </div>
+                  <ChevronRight className='w-5 h-5 text-gray-500 dark:text-gray-400' />
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+
+      {/* Mobile Overlay */}
+      {isSidebarOpen && (
+        <div
+          className='fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden'
+          onClick={toggleSidebar}
+        ></div>
+      )}
     </div>
-  );
+  )
 }
+
