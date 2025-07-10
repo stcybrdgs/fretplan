@@ -69,7 +69,7 @@ export default function Home() {
           <div className='flex items-center space-x-3'>
             <button
               onClick={toggleSidebar}
-              className='w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white hover:bg-primary-hover transition-colors'
+              className='w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white hover:bg-primary-hover transition-colors md:hidden'
             >
               <Menu className='w-4 h-4' />
             </button>
