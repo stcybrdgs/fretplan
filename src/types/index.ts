@@ -42,6 +42,9 @@ export interface AppState {
   activeView: ViewType
   isSidebarOpen: boolean
 
+  // Theme state
+  isDarkMode: boolean
+
   // Data state
   practiceAreas: PracticeArea[]
   projects: ProjectArea[]
@@ -51,6 +54,7 @@ export interface AppState {
   setActiveProject: (id: string) => void
   setActiveView: (view: ViewType) => void
   setSidebarOpen: (isOpen: boolean) => void
+  toggleTheme: () => void
 
   // CRUD operations
   addPracticeArea: (name: string, color: PracticeArea['color']) => void
@@ -74,3 +78,4 @@ export interface AppState {
     areaType: AreaType
   ) => void
 }
+

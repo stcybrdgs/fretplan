@@ -13,8 +13,6 @@ import {
 import { useAppStore } from '@/store/useAppStore'
 
 export default function Home() {
-  const [isDarkMode, setIsDarkMode] = useState(false)
-
   // Zustand store
   const {
     practiceAreas,
@@ -23,10 +21,12 @@ export default function Home() {
     activeProjectId,
     activeView,
     isSidebarOpen,
+    isDarkMode,
     setActivePracticeArea,
     setActiveProject,
     setActiveView,
     setSidebarOpen,
+    toggleTheme,
     addPracticeArea,
     addProject,
     addTaskCard,
@@ -37,31 +37,12 @@ export default function Home() {
 
   // Set initial theme on component mount
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme')
-    const prefersDark =
-      savedTheme === 'dark' ||
-      (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)
-
-    setIsDarkMode(prefersDark)
-    if (prefersDark) {
+    if (isDarkMode) {
       document.documentElement.classList.add('dark')
     } else {
       document.documentElement.classList.remove('dark')
     }
-  }, [])
-
-  const toggleTheme = () => {
-    const newDarkMode = !isDarkMode
-    setIsDarkMode(newDarkMode)
-
-    if (newDarkMode) {
-      document.documentElement.classList.add('dark')
-      localStorage.setItem('theme', 'dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-      localStorage.setItem('theme', 'light')
-    }
-  }
+  }, [isDarkMode])
 
   const toggleSidebar = () => {
     setSidebarOpen(!isSidebarOpen)
@@ -459,3 +440,4 @@ export default function Home() {
     </div>
   )
 }
+

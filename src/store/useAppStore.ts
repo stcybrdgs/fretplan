@@ -91,6 +91,7 @@ export const useAppStore = create<AppState>()(
       activeProjectId: null,
       activeView: 'practice-area',
       isSidebarOpen: false,
+      isDarkMode: false,
       practiceAreas: initialPracticeAreas,
       projects: initialProjects,
 
@@ -112,6 +113,21 @@ export const useAppStore = create<AppState>()(
       setActiveView: (view) => set({ activeView: view }),
 
       setSidebarOpen: (isOpen: boolean) => set({ isSidebarOpen: isOpen }),
+
+      // Theme action
+      toggleTheme: () =>
+        set((state) => {
+          const newDarkMode = !state.isDarkMode
+
+          // Update DOM immediately
+          if (newDarkMode) {
+            document.documentElement.classList.add('dark')
+          } else {
+            document.documentElement.classList.remove('dark')
+          }
+
+          return { isDarkMode: newDarkMode }
+        }),
 
       // CRUD operations
       addPracticeArea: (name: string, color: PracticeArea['color']) =>
@@ -260,6 +276,8 @@ export const useAppStore = create<AppState>()(
           }
         }),
     }),
+
+    // Persist configuration
     {
       name: 'fretplan-storage', // localStorage key
       partialize: (state) => ({
@@ -267,7 +285,17 @@ export const useAppStore = create<AppState>()(
         projects: state.projects,
         activePracticeAreaId: state.activePracticeAreaId,
         activeProjectId: state.activeProjectId,
+        isDarkMode: state.isDarkMode,
       }),
+      onRehydrateStorage: () => (state) => {
+        // Apply theme to DOM when store rehydrates
+        if (state?.isDarkMode) {
+          document.documentElement.classList.add('dark')
+        } else {
+          document.documentElement.classList.remove('dark')
+        }
+      },
     }
   )
 )
+
