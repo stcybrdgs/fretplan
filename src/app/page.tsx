@@ -10,15 +10,29 @@ import {
   ChevronDown,
   ChevronRight,
 } from 'lucide-react'
+import { useAppStore } from '@/store/useAppStore'
 
 export default function Home() {
   const [isDarkMode, setIsDarkMode] = useState(false)
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const [expandedCard, setExpandedCard] = useState<string | null>('card-1')
+
+  // Zustand store
+  const {
+    practiceAreas,
+    activePracticeAreaId,
+    activeView,
+    isSidebarOpen,
+    setActivePracticeArea,
+    setActiveView,
+    setSidebarOpen,
+    addPracticeArea,
+    addTaskCard,
+    addTodo,
+    toggleTodo,
+    toggleTaskCard,
+  } = useAppStore()
 
   // Set initial theme on component mount
   useEffect(() => {
-    // Check if user has a saved preference or default to light
     const savedTheme = localStorage.getItem('theme')
     const prefersDark =
       savedTheme === 'dark' ||
@@ -36,7 +50,6 @@ export default function Home() {
     const newDarkMode = !isDarkMode
     setIsDarkMode(newDarkMode)
 
-    // Update the DOM immediately
     if (newDarkMode) {
       document.documentElement.classList.add('dark')
       localStorage.setItem('theme', 'dark')
@@ -44,20 +57,56 @@ export default function Home() {
       document.documentElement.classList.remove('dark')
       localStorage.setItem('theme', 'light')
     }
-
-    console.log('Theme switched to:', newDarkMode ? 'dark' : 'light')
-    console.log(
-      'HTML class list:',
-      document.documentElement.classList.toString()
-    )
   }
 
   const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen)
+    setSidebarOpen(!isSidebarOpen)
   }
 
-  const toggleCard = (cardId: string) => {
-    setExpandedCard(expandedCard === cardId ? null : cardId)
+  // Get active practice area data
+  const activePracticeArea = practiceAreas.find(
+    (area) => area.id === activePracticeAreaId
+  )
+
+  // Get color class for practice area dots
+  const getColorClass = (color: string) => {
+    const colorMap = {
+      purple: 'bg-purple-600',
+      green: 'bg-green-600',
+      orange: 'bg-orange-600',
+      blue: 'bg-blue-600',
+      red: 'bg-red-600',
+    }
+    return colorMap[color as keyof typeof colorMap] || 'bg-purple-600'
+  }
+
+  // Handle adding new practice area (placeholder for now)
+  const handleAddPracticeArea = () => {
+    // We'll implement this with a modal later
+    const name = prompt('Enter practice area name:')
+    if (name) {
+      addPracticeArea(name, 'purple')
+    }
+  }
+
+  // Handle adding new task card
+  const handleAddTaskCard = () => {
+    if (!activePracticeAreaId) return
+    const title = prompt('Enter task card title:')
+    if (title) {
+      addTaskCard(activePracticeAreaId, title)
+    }
+  }
+
+  // Handle adding new todo
+  const handleAddTodo = (
+    practiceAreaId: string,
+    taskCardId: string,
+    text: string
+  ) => {
+    if (text.trim()) {
+      addTodo(practiceAreaId, taskCardId, text)
+    }
   }
 
   return (
@@ -114,45 +163,38 @@ export default function Home() {
           } md:translate-x-0`}
         >
           <div className='p-4 space-y-2'>
+            {/* Practice Areas Section */}
             <div className='text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-3 flex items-center justify-between'>
               <span>Practice Areas</span>
-              <button className='text-gray-900 dark:text-white p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors'>
+              <button
+                onClick={handleAddPracticeArea}
+                className='text-gray-900 dark:text-white p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors'
+              >
                 <Plus className='w-4 h-4' />
               </button>
             </div>
 
-            <a
-              href='#'
-              className='flex items-center space-x-3 text-gray-900 dark:text-white p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 bg-purple-50 dark:bg-purple-900/20 transition-colors'
-            >
-              <span className='w-2 h-2 bg-purple-600 rounded-full'></span>
-              <span>Daily Practice</span>
-            </a>
+            {/* Dynamic Practice Areas */}
+            {practiceAreas.map((area) => (
+              <button
+                key={area.id}
+                onClick={() => setActivePracticeArea(area.id)}
+                className={`flex items-center space-x-3 w-full text-left p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
+                  activePracticeAreaId === area.id
+                    ? 'bg-purple-50 dark:bg-purple-900/20 text-gray-900 dark:text-white'
+                    : 'text-gray-900 dark:text-white'
+                }`}
+              >
+                <span
+                  className={`w-2 h-2 ${getColorClass(
+                    area.color
+                  )} rounded-full`}
+                ></span>
+                <span>{area.name}</span>
+              </button>
+            ))}
 
-            <a
-              href='#'
-              className='flex items-center space-x-3 text-gray-900 dark:text-white p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors'
-            >
-              <span className='w-2 h-2 bg-green-600 rounded-full'></span>
-              <span>Scales & Theory</span>
-            </a>
-
-            <a
-              href='#'
-              className='flex items-center space-x-3 text-gray-900 dark:text-white p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors'
-            >
-              <span className='w-2 h-2 bg-purple-600 rounded-full'></span>
-              <span>Songs & Repertoire</span>
-            </a>
-
-            <a
-              href='#'
-              className='flex items-center space-x-3 text-gray-900 dark:text-white p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors'
-            >
-              <span className='w-2 h-2 bg-orange-600 rounded-full'></span>
-              <span>Technique</span>
-            </a>
-
+            {/* Projects Section */}
             <div className='pt-4 mt-4 border-t border-gray-200 dark:border-gray-700'>
               <div className='text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-3 flex items-center justify-between'>
                 Projects
@@ -160,39 +202,41 @@ export default function Home() {
                   <Plus className='w-4 h-4' />
                 </button>
               </div>
-              <a
-                href='#'
-                className='flex items-center space-x-3 text-gray-900 dark:text-white p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 bg-purple-50 dark:bg-purple-900/20 transition-colors'
+              <button
+                onClick={() => setActiveView('practice-area')}
+                className='flex items-center space-x-3 w-full text-left text-gray-900 dark:text-white p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 bg-purple-50 dark:bg-purple-900/20 transition-colors'
               >
                 <span className='w-2 h-2 bg-purple-600 rounded-full'></span>
                 <span>Original #1</span>
-              </a>
+              </button>
             </div>
 
+            {/* Analyze Section */}
             <div className='pt-4 mt-4 border-t border-gray-200 dark:border-gray-700'>
               <div className='text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-3'>
                 Analyze
               </div>
-              <a
-                href='#'
-                className='flex items-center space-x-3 text-gray-900 dark:text-white p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 bg-purple-50 dark:bg-purple-900/20 transition-colors'
+              <button
+                onClick={() => setActiveView('dashboard')}
+                className='flex items-center space-x-3 w-full text-left text-gray-900 dark:text-white p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 bg-purple-50 dark:bg-purple-900/20 transition-colors'
               >
                 <span className='w-2 h-2 bg-purple-600 rounded-full'></span>
                 <span>Dashboard</span>
-              </a>
+              </button>
             </div>
 
+            {/* Manage Section */}
             <div className='pt-4 mt-4 border-t border-gray-200 dark:border-gray-700'>
               <div className='text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-3'>
                 Manage
               </div>
-              <a
-                href='#'
-                className='flex items-center space-x-3 text-gray-900 dark:text-white p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 bg-purple-50 dark:bg-purple-900/20 transition-colors'
+              <button
+                onClick={() => setActiveView('tags')}
+                className='flex items-center space-x-3 w-full text-left text-gray-900 dark:text-white p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 bg-purple-50 dark:bg-purple-900/20 transition-colors'
               >
                 <span className='w-2 h-2 bg-purple-600 rounded-full'></span>
                 <span>Tags</span>
-              </a>
+              </button>
             </div>
           </div>
         </aside>
@@ -200,107 +244,155 @@ export default function Home() {
         {/* Main Content */}
         <main className='flex-1 md:ml-64 p-6 bg-gray-50 dark:bg-gray-900 min-h-screen'>
           <div className='max-w-4xl mx-auto'>
-            {/* Page Header */}
-            <div className='mb-6'>
-              <h2 className='text-2xl font-bold text-gray-900 dark:text-white mb-2'>
-                Daily Practice
-              </h2>
-              <p className='text-gray-600 dark:text-gray-400'>
-                Plan your practice, track your progress
-              </p>
-            </div>
-
-            {/* Add New Card Button */}
-            <div className='mb-6'>
-              <button className='bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors'>
-                <Plus className='w-4 h-4' />
-                <span>Add Practice Card</span>
-              </button>
-            </div>
-
-            {/* Practice Cards */}
-            <div className='space-y-4'>
-              {/* Expanded Card */}
-              <div className='bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm'>
-                <div
-                  className='p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 transition-colors'
-                  onClick={() => toggleCard('card-1')}
-                >
-                  <div className='flex items-center space-x-3'>
-                    <span className='w-3 h-3 bg-green-500 rounded-full'></span>
-                    <h3 className='text-lg font-medium text-gray-900 dark:text-white'>
-                      G Dominant Scale Ideas
-                    </h3>
-                  </div>
-                  {expandedCard === 'card-1' ? (
-                    <ChevronDown className='w-5 h-5 text-gray-500 dark:text-gray-400' />
-                  ) : (
-                    <ChevronRight className='w-5 h-5 text-gray-500 dark:text-gray-400' />
-                  )}
+            {activeView === 'practice-area' && activePracticeArea && (
+              <>
+                {/* Page Header */}
+                <div className='mb-6'>
+                  <h2 className='text-2xl font-bold text-gray-900 dark:text-white mb-2'>
+                    {activePracticeArea.name}
+                  </h2>
+                  <p className='text-gray-600 dark:text-gray-400'>
+                    Plan your practice, track your progress
+                  </p>
                 </div>
 
-                {expandedCard === 'card-1' && (
-                  <div className='p-4 space-y-3'>
-                    <div className='flex items-center space-x-3'>
-                      <input
-                        type='checkbox'
-                        className='w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500'
-                      />
-                      <span className='text-gray-900 dark:text-white'>
-                        Practice Dm - F - Bb - A progression
-                      </span>
-                    </div>
-                    <div className='flex items-center space-x-3'>
-                      <input
-                        type='checkbox'
-                        defaultChecked
-                        className='w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500'
-                      />
-                      <span className='text-gray-500 dark:text-gray-400 line-through'>
-                        Review tritone substitutions
-                      </span>
-                    </div>
-                    <div className='flex items-center space-x-3'>
-                      <input
-                        type='checkbox'
-                        className='w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500'
-                      />
-                      <span className='text-gray-900 dark:text-white'>
-                        Apply to &quot;Autumn Leaves&quot; in Bb
-                      </span>
-                    </div>
-
-                    {/* Add new task */}
-                    <div className='flex items-center space-x-2 mt-4 pt-3 border-t border-gray-200 dark:border-gray-700'>
-                      <input
-                        type='text'
-                        placeholder='Add new task...'
-                        className='flex-1 p-2 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent'
-                      />
-                      <button className='bg-primary hover:bg-primary-hover text-white px-3 py-2 rounded text-sm transition-colors'>
-                        Add
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Collapsed Card */}
-              <div className='bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm'>
-                <div
-                  className='p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-between transition-colors'
-                  onClick={() => toggleCard('card-2')}
-                >
-                  <div className='flex items-center space-x-3'>
-                    <span className='w-3 h-3 bg-purple-600 rounded-full'></span>
-                    <h3 className='text-lg font-medium text-gray-900 dark:text-white'>
-                      Autumn Leaves - Bb &amp; G Major
-                    </h3>
-                  </div>
-                  <ChevronRight className='w-5 h-5 text-gray-500 dark:text-gray-400' />
+                {/* Add New Card Button */}
+                <div className='mb-6'>
+                  <button
+                    onClick={handleAddTaskCard}
+                    className='bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors'
+                  >
+                    <Plus className='w-4 h-4' />
+                    <span>Add Practice Card</span>
+                  </button>
                 </div>
+
+                {/* Task Cards */}
+                <div className='space-y-4'>
+                  {activePracticeArea.taskCards.map((card) => (
+                    <div
+                      key={card.id}
+                      className='bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm'
+                    >
+                      <div
+                        className='p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 transition-colors'
+                        onClick={() =>
+                          toggleTaskCard(activePracticeArea.id, card.id)
+                        }
+                      >
+                        <div className='flex items-center space-x-3'>
+                          <span
+                            className={`w-3 h-3 ${getColorClass(
+                              card.color
+                            )} rounded-full`}
+                          ></span>
+                          <h3 className='text-lg font-medium text-gray-900 dark:text-white'>
+                            {card.title}
+                          </h3>
+                        </div>
+                        {card.isExpanded ? (
+                          <ChevronDown className='w-5 h-5 text-gray-500 dark:text-gray-400' />
+                        ) : (
+                          <ChevronRight className='w-5 h-5 text-gray-500 dark:text-gray-400' />
+                        )}
+                      </div>
+
+                      {card.isExpanded && (
+                        <div className='p-4 space-y-3'>
+                          {/* Todos */}
+                          {card.todos.map((todo) => (
+                            <div
+                              key={todo.id}
+                              className='flex items-center space-x-3'
+                            >
+                              <input
+                                type='checkbox'
+                                checked={todo.completed}
+                                onChange={() =>
+                                  toggleTodo(
+                                    activePracticeArea.id,
+                                    card.id,
+                                    todo.id
+                                  )
+                                }
+                                className='w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500'
+                              />
+                              <span
+                                className={`${
+                                  todo.completed
+                                    ? 'text-gray-500 dark:text-gray-400 line-through'
+                                    : 'text-gray-900 dark:text-white'
+                                }`}
+                              >
+                                {todo.text}
+                              </span>
+                            </div>
+                          ))}
+
+                          {/* Add new todo */}
+                          <div className='flex items-center space-x-2 mt-4 pt-3 border-t border-gray-200 dark:border-gray-700'>
+                            <input
+                              type='text'
+                              placeholder='Add new task...'
+                              className='flex-1 p-2 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent'
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter') {
+                                  const input = e.target as HTMLInputElement
+                                  handleAddTodo(
+                                    activePracticeArea.id,
+                                    card.id,
+                                    input.value
+                                  )
+                                  input.value = ''
+                                }
+                              }}
+                            />
+                            <button
+                              onClick={(e) => {
+                                const input = (e.target as HTMLElement)
+                                  .previousElementSibling as HTMLInputElement
+                                handleAddTodo(
+                                  activePracticeArea.id,
+                                  card.id,
+                                  input.value
+                                )
+                                input.value = ''
+                              }}
+                              className='bg-primary hover:bg-primary-hover text-white px-3 py-2 rounded text-sm transition-colors'
+                            >
+                              Add
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* Other views */}
+            {activeView === 'dashboard' && (
+              <div className='text-center py-12'>
+                <h2 className='text-2xl font-bold text-gray-900 dark:text-white mb-4'>
+                  Dashboard
+                </h2>
+                <p className='text-gray-600 dark:text-gray-400'>
+                  Coming soon...
+                </p>
               </div>
-            </div>
+            )}
+
+            {activeView === 'tags' && (
+              <div className='text-center py-12'>
+                <h2 className='text-2xl font-bold text-gray-900 dark:text-white mb-4'>
+                  Tags
+                </h2>
+                <p className='text-gray-600 dark:text-gray-400'>
+                  Coming soon...
+                </p>
+              </div>
+            )}
           </div>
         </main>
       </div>
