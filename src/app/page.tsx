@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Menu,
   Sun,
@@ -9,6 +9,10 @@ import {
   Plus,
   ChevronDown,
   ChevronRight,
+  Play,
+  Pause,
+  Square,
+  Clock,
 } from 'lucide-react'
 import { useAppStore } from '@/store/useAppStore'
 
@@ -22,6 +26,7 @@ export default function Home() {
     activeView,
     isSidebarOpen,
     isDarkMode,
+    activeTimer,
     setActivePracticeArea,
     setActiveProject,
     setActiveView,
@@ -33,9 +38,27 @@ export default function Home() {
     addTodo,
     toggleTodo,
     toggleTaskCard,
+    startTimer,
+    stopTimer,
+    pauseTimer,
+    resumeTimer,
   } = useAppStore()
 
-  // Set initial theme on component mount
+  const [timerDescriptions, setTimerDescriptions] = useState<{
+    [cardId: string]: string
+  }>({})
+  const [currentTime, setCurrentTime] = useState(new Date())
+
+  // Update current time every second for timer display
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date())
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [])
+
+  // Apply theme on component mount (for initial load)
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark')
@@ -43,6 +66,69 @@ export default function Home() {
       document.documentElement.classList.remove('dark')
     }
   }, [isDarkMode])
+
+  // Timer helper functions
+  const formatTime = (milliseconds: number) => {
+    const totalSeconds = Math.floor(milliseconds / 1000)
+    const hours = Math.floor(totalSeconds / 3600)
+    const minutes = Math.floor((totalSeconds % 3600) / 60)
+    const seconds = totalSeconds % 60
+
+    if (hours > 0) {
+      return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds
+        .toString()
+        .padStart(2, '0')}`
+    }
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`
+  }
+
+  const getTimerDuration = (timer: typeof activeTimer) => {
+    if (!timer) return 0
+    if (timer.status === 'paused') {
+      // For paused timers, return duration at pause time
+      return timer.startTime.getTime() - (timer.pausedTime || 0)
+    }
+    // For running timers, calculate current duration
+    return (
+      currentTime.getTime() -
+      timer.startTime.getTime() -
+      (timer.pausedTime || 0)
+    )
+  }
+
+  const isTimerActiveForCard = (cardId: string) => {
+    return activeTimer?.taskCardId === cardId
+  }
+
+  const handleStartTimer = (
+    areaId: string,
+    areaName: string,
+    areaType: 'practice' | 'project',
+    cardId: string,
+    cardTitle: string
+  ) => {
+    const description = timerDescriptions[cardId] || ''
+
+    if (activeTimer && activeTimer.taskCardId !== cardId) {
+      if (
+        confirm('Starting a new timer will stop the current one. Continue?')
+      ) {
+        startTimer(areaId, areaName, areaType, cardId, cardTitle, description)
+        // Clear the description for this card after starting
+        setTimerDescriptions((prev) => ({ ...prev, [cardId]: '' }))
+      }
+    } else {
+      startTimer(areaId, areaName, areaType, cardId, cardTitle, description)
+      // Clear the description for this card after starting
+      setTimerDescriptions((prev) => ({ ...prev, [cardId]: '' }))
+    }
+  }
+
+  const handleStopTimer = () => {
+    if (confirm('Stop the current timer? This will save the session.')) {
+      stopTimer()
+    }
+  }
 
   const toggleSidebar = () => {
     setSidebarOpen(!isSidebarOpen)
@@ -302,6 +388,100 @@ export default function Home() {
                         key={card.id}
                         className='bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm'
                       >
+                        {/* Timer Controls Section */}
+                        <div className='px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-750'>
+                          <div className='flex items-center justify-between'>
+                            <div className='flex items-center space-x-3'>
+                              <Clock className='w-4 h-4 text-gray-500 dark:text-gray-400' />
+
+                              {/* Timer Display */}
+                              {isTimerActiveForCard(card.id) && activeTimer ? (
+                                <div className='flex items-center space-x-3'>
+                                  <span className='text-lg font-mono font-semibold text-purple-600 dark:text-purple-400'>
+                                    {formatTime(getTimerDuration(activeTimer))}
+                                  </span>
+                                  <span className='text-xs text-gray-500 dark:text-gray-400'>
+                                    {activeTimer.status === 'running'
+                                      ? '● Recording'
+                                      : '⏸ Paused'}
+                                  </span>
+                                </div>
+                              ) : (
+                                <span className='text-sm text-gray-500 dark:text-gray-400'>
+                                  No timer active
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Timer Controls */}
+                            <div className='flex items-center space-x-2'>
+                              {isTimerActiveForCard(card.id) ? (
+                                // Controls for active timer
+                                <>
+                                  {activeTimer?.status === 'running' ? (
+                                    <button
+                                      onClick={pauseTimer}
+                                      className='p-2 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg transition-colors'
+                                      title='Pause timer'
+                                    >
+                                      <Pause className='w-4 h-4' />
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={resumeTimer}
+                                      className='p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors'
+                                      title='Resume timer'
+                                    >
+                                      <Play className='w-4 h-4' />
+                                    </button>
+                                  )}
+                                  <button
+                                    onClick={handleStopTimer}
+                                    className='p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors'
+                                    title='Stop timer'
+                                  >
+                                    <Square className='w-4 h-4' />
+                                  </button>
+                                </>
+                              ) : (
+                                // Start timer controls
+                                <div className='flex items-center space-x-2'>
+                                  <input
+                                    type='text'
+                                    placeholder='Description (optional)'
+                                    value={timerDescriptions[card.id] || ''}
+                                    onChange={(e) =>
+                                      setTimerDescriptions((prev) => ({
+                                        ...prev,
+                                        [card.id]: e.target.value,
+                                      }))
+                                    }
+                                    className='px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent'
+                                  />
+                                  <button
+                                    onClick={() =>
+                                      handleStartTimer(
+                                        activeArea.id,
+                                        activeArea.name,
+                                        activeAreaType as
+                                          | 'practice'
+                                          | 'project',
+                                        card.id,
+                                        card.title
+                                      )
+                                    }
+                                    className='p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors'
+                                    title='Start timer'
+                                  >
+                                    <Play className='w-4 h-4' />
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Task Card Header */}
                         <div
                           className='p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 transition-colors'
                           onClick={() =>
@@ -440,4 +620,3 @@ export default function Home() {
     </div>
   )
 }
-
