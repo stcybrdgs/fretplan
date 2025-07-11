@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { AppState, PracticeArea, TaskCard, Todo } from '@/types'
+import { AppState, PracticeArea } from '@/types'
 
 // Helper function to generate IDs
 const generateId = () => Math.random().toString(36).substr(2, 9)
@@ -75,7 +75,7 @@ const initialPracticeAreas: PracticeArea[] = [
 
 export const useAppStore = create<AppState>()(
   persist(
-    (set, get) => ({
+    (set, _get) => ({
       // Initial state
       activePracticeAreaId: 'daily-practice',
       activeView: 'practice-area',
