@@ -17,6 +17,32 @@ import {
 import { useAppStore } from '@/store/useAppStore'
 
 export default function Home() {
+  // State
+  const [timerDescriptions, setTimerDescriptions] = useState<{
+    [cardId: string]: string
+  }>({})
+  const [currentTime, setCurrentTime] = useState(new Date())
+  const [sessionDescriptions, setSessionDescriptions] = useState<string[]>([])
+  const [showAutocomplete, setShowAutocomplete] = useState<{
+    [cardId: string]: boolean
+  }>({})
+  const [filteredDescriptions, setFilteredDescriptions] = useState<{
+    [cardId: string]: string[]
+  }>({})
+
+  // Load unique descriptions from sessions on mount
+  useEffect(() => {
+    const store = useAppStore.getState()
+    const uniqueDescriptions = [
+      ...new Set(
+        store.sessions
+          .map((session) => session.description)
+          .filter((desc) => desc.trim() !== '')
+      ),
+    ]
+    setSessionDescriptions(uniqueDescriptions)
+  }, [])
+
   // Zustand store
   const {
     practiceAreas,
@@ -44,11 +70,6 @@ export default function Home() {
     resumeTimer,
   } = useAppStore()
 
-  const [timerDescriptions, setTimerDescriptions] = useState<{
-    [cardId: string]: string
-  }>({})
-  const [currentTime, setCurrentTime] = useState(new Date())
-
   // Update current time every second for timer display
   useEffect(() => {
     const interval = setInterval(() => {
@@ -66,6 +87,55 @@ export default function Home() {
       document.documentElement.classList.remove('dark')
     }
   }, [isDarkMode])
+
+  // Autocomplete helper functions
+  const handleDescriptionChange = (cardId: string, value: string) => {
+    console.log('Typing:', value)
+    console.log('Available descriptions:', sessionDescriptions)
+
+    setTimerDescriptions((prev) => ({ ...prev, [cardId]: value }))
+
+    // Filter descriptions based on input
+    if (value.trim() === '') {
+      setFilteredDescriptions((prev) => ({ ...prev, [cardId]: [] }))
+      setShowAutocomplete((prev) => ({ ...prev, [cardId]: false }))
+    } else {
+      const filtered = sessionDescriptions.filter((desc) =>
+        desc.toLowerCase().includes(value.toLowerCase())
+      )
+      setFilteredDescriptions((prev) => ({ ...prev, [cardId]: filtered }))
+      setShowAutocomplete((prev) => ({
+        ...prev,
+        [cardId]: filtered.length > 0,
+      }))
+    }
+  }
+
+  const handleDescriptionSelect = (cardId: string, description: string) => {
+    setTimerDescriptions((prev) => ({ ...prev, [cardId]: description }))
+    setShowAutocomplete((prev) => ({ ...prev, [cardId]: false }))
+  }
+
+  const handleDescriptionFocus = (cardId: string) => {
+    const currentValue = timerDescriptions[cardId] || ''
+    if (currentValue.trim() !== '') {
+      const filtered = sessionDescriptions.filter((desc) =>
+        desc.toLowerCase().includes(currentValue.toLowerCase())
+      )
+      setFilteredDescriptions((prev) => ({ ...prev, [cardId]: filtered }))
+      setShowAutocomplete((prev) => ({
+        ...prev,
+        [cardId]: filtered.length > 0,
+      }))
+    }
+  }
+
+  const handleDescriptionBlur = (cardId: string) => {
+    // Delay hiding to allow click on dropdown items
+    setTimeout(() => {
+      setShowAutocomplete((prev) => ({ ...prev, [cardId]: false }))
+    }, 200)
+  }
 
   // Timer helper functions
   const formatTime = (milliseconds: number) => {
@@ -85,10 +155,8 @@ export default function Home() {
   const getTimerDuration = (timer: typeof activeTimer) => {
     if (!timer) return 0
     if (timer.status === 'paused') {
-      // For paused timers, return duration at pause time
       return timer.startTime.getTime() - (timer.pausedTime || 0)
     }
-    // For running timers, calculate current duration
     return (
       currentTime.getTime() -
       timer.startTime.getTime() -
@@ -114,13 +182,27 @@ export default function Home() {
         confirm('Starting a new timer will stop the current one. Continue?')
       ) {
         startTimer(areaId, areaName, areaType, cardId, cardTitle, description)
-        // Clear the description for this card after starting
         setTimerDescriptions((prev) => ({ ...prev, [cardId]: '' }))
+
+        // Add new description to sessionDescriptions if it doesn't exist
+        if (
+          description.trim() !== '' &&
+          !sessionDescriptions.includes(description)
+        ) {
+          setSessionDescriptions((prev) => [...prev, description])
+        }
       }
     } else {
       startTimer(areaId, areaName, areaType, cardId, cardTitle, description)
-      // Clear the description for this card after starting
       setTimerDescriptions((prev) => ({ ...prev, [cardId]: '' }))
+
+      // Add new description to sessionDescriptions if it doesn't exist
+      if (
+        description.trim() !== '' &&
+        !sessionDescriptions.includes(description)
+      ) {
+        setSessionDescriptions((prev) => [...prev, description])
+      }
     }
   }
 
@@ -156,9 +238,8 @@ export default function Home() {
     return colorMap[color as keyof typeof colorMap] || 'bg-purple-600'
   }
 
-  // Handle adding new practice area (placeholder for now)
+  // Handle adding new practice area
   const handleAddPracticeArea = () => {
-    // We'll implement this with a modal later
     const name = prompt('Enter practice area name:')
     if (name) {
       addPracticeArea(name, 'purple')
@@ -446,18 +527,50 @@ export default function Home() {
                               ) : (
                                 // Start timer controls
                                 <div className='flex items-center space-x-2'>
-                                  <input
-                                    type='text'
-                                    placeholder='Description (optional)'
-                                    value={timerDescriptions[card.id] || ''}
-                                    onChange={(e) =>
-                                      setTimerDescriptions((prev) => ({
-                                        ...prev,
-                                        [card.id]: e.target.value,
-                                      }))
-                                    }
-                                    className='px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent'
-                                  />
+                                  <div className='relative'>
+                                    <input
+                                      type='text'
+                                      placeholder='Description (optional)'
+                                      value={timerDescriptions[card.id] || ''}
+                                      onChange={(e) =>
+                                        handleDescriptionChange(
+                                          card.id,
+                                          e.target.value
+                                        )
+                                      }
+                                      onFocus={() =>
+                                        handleDescriptionFocus(card.id)
+                                      }
+                                      onBlur={() =>
+                                        handleDescriptionBlur(card.id)
+                                      }
+                                      className='px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent'
+                                    />
+
+                                    {/* Autocomplete Dropdown */}
+                                    {showAutocomplete[card.id] &&
+                                      filteredDescriptions[card.id]?.length >
+                                        0 && (
+                                        <div className='absolute top-full left-0 right-0 z-50 mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-40 overflow-y-auto'>
+                                          {filteredDescriptions[card.id].map(
+                                            (desc, index) => (
+                                              <div
+                                                key={index}
+                                                className='px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-900 dark:text-white'
+                                                onMouseDown={() =>
+                                                  handleDescriptionSelect(
+                                                    card.id,
+                                                    desc
+                                                  )
+                                                }
+                                              >
+                                                {desc}
+                                              </div>
+                                            )
+                                          )}
+                                        </div>
+                                      )}
+                                  </div>
                                   <button
                                     onClick={() =>
                                       handleStartTimer(
@@ -620,3 +733,4 @@ export default function Home() {
     </div>
   )
 }
+
