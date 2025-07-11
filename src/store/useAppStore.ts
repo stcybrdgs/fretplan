@@ -75,7 +75,7 @@ const initialPracticeAreas: PracticeArea[] = [
 
 export const useAppStore = create<AppState>()(
   persist(
-    (set, _get) => ({
+    (set) => ({
       // Initial state
       activePracticeAreaId: 'daily-practice',
       activeView: 'practice-area',
