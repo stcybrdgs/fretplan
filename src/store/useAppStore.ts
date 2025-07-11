@@ -115,6 +115,9 @@ export const useAppStore = create<AppState>()(
       setSidebarOpen: (isOpen: boolean) => set({ isSidebarOpen: isOpen }),
 
       // Theme action
+      // TODO: Implement flash-free dark mode to prevent hydration mismatch
+      // Consider: blocking script in <head> or next-themes library for production
+      // Current implementation may cause brief light->dark flash on page load
       toggleTheme: () =>
         set((state) => {
           const newDarkMode = !state.isDarkMode
@@ -286,9 +289,13 @@ export const useAppStore = create<AppState>()(
         activePracticeAreaId: state.activePracticeAreaId,
         activeProjectId: state.activeProjectId,
         isDarkMode: state.isDarkMode,
+        // TODO: Fix hydration flicker - theme resets to light on page refresh
+        // Plan: Integrate next-themes library or implement blocking script in <head>
+        // For now, accepting UX tradeoff to maintain centralized state architecture
       }),
       onRehydrateStorage: () => (state) => {
         // Apply theme to DOM when store rehydrates
+        // TODO: This causes hydration mismatch - investigate next-themes integration
         if (state?.isDarkMode) {
           document.documentElement.classList.add('dark')
         } else {
