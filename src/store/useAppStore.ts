@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { AppState, PracticeArea } from '@/types'
+import { AppState, PracticeArea, ProjectArea, AreaType } from '@/types'
 
 // Helper function to generate IDs
 const generateId = () => Math.random().toString(36).substr(2, 9)
@@ -73,18 +73,41 @@ const initialPracticeAreas: PracticeArea[] = [
   },
 ]
 
+const initialProjects: ProjectArea[] = [
+  {
+    id: 'original-1',
+    name: 'Original #1',
+    color: 'purple',
+    createdAt: new Date(),
+    taskCards: [],
+  },
+]
+
 export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
       // Initial state
       activePracticeAreaId: 'daily-practice',
+      activeProjectId: null,
       activeView: 'practice-area',
       isSidebarOpen: false,
       practiceAreas: initialPracticeAreas,
+      projects: initialProjects,
 
       // Navigation actions
       setActivePracticeArea: (id: string) =>
-        set({ activePracticeAreaId: id, activeView: 'practice-area' }),
+        set({
+          activePracticeAreaId: id,
+          activeProjectId: null,
+          activeView: 'practice-area',
+        }),
+
+      setActiveProject: (id: string) =>
+        set({
+          activeProjectId: id,
+          activePracticeAreaId: null,
+          activeView: 'project-area',
+        }),
 
       setActiveView: (view) => set({ activeView: view }),
 
@@ -105,105 +128,146 @@ export const useAppStore = create<AppState>()(
           ],
         })),
 
-      addTaskCard: (practiceAreaId: string, title: string) =>
+      addProject: (name: string, color: ProjectArea['color']) =>
         set((state) => ({
-          practiceAreas: state.practiceAreas.map((area) =>
-            area.id === practiceAreaId
-              ? {
-                  ...area,
-                  taskCards: [
-                    ...area.taskCards,
-                    {
-                      id: generateId(),
-                      title,
-                      isExpanded: true,
-                      color: 'purple',
-                      todos: [],
-                      createdAt: new Date(),
-                    },
-                  ],
-                }
-              : area
-          ),
+          projects: [
+            ...state.projects,
+            {
+              id: generateId(),
+              name,
+              color,
+              taskCards: [],
+              createdAt: new Date(),
+            },
+          ],
         })),
 
-      addTodo: (practiceAreaId: string, taskCardId: string, text: string) =>
-        set((state) => ({
-          practiceAreas: state.practiceAreas.map((area) =>
-            area.id === practiceAreaId
-              ? {
-                  ...area,
-                  taskCards: area.taskCards.map((card) =>
-                    card.id === taskCardId
-                      ? {
-                          ...card,
-                          todos: [
-                            ...card.todos,
-                            {
-                              id: generateId(),
-                              text,
-                              completed: false,
-                              createdAt: new Date(),
-                            },
-                          ],
-                        }
-                      : card
-                  ),
-                }
-              : area
-          ),
-        })),
+      addTaskCard: (areaId: string, title: string, areaType: AreaType) =>
+        set((state) => {
+          const targetArray =
+            areaType === 'practice' ? 'practiceAreas' : 'projects'
+          return {
+            [targetArray]: state[targetArray].map((area) =>
+              area.id === areaId
+                ? {
+                    ...area,
+                    taskCards: [
+                      ...area.taskCards,
+                      {
+                        id: generateId(),
+                        title,
+                        isExpanded: true,
+                        color: 'purple',
+                        todos: [],
+                        createdAt: new Date(),
+                      },
+                    ],
+                  }
+                : area
+            ),
+          }
+        }),
+
+      addTodo: (
+        areaId: string,
+        taskCardId: string,
+        text: string,
+        areaType: AreaType
+      ) =>
+        set((state) => {
+          const targetArray =
+            areaType === 'practice' ? 'practiceAreas' : 'projects'
+          return {
+            [targetArray]: state[targetArray].map((area) =>
+              area.id === areaId
+                ? {
+                    ...area,
+                    taskCards: area.taskCards.map((card) =>
+                      card.id === taskCardId
+                        ? {
+                            ...card,
+                            todos: [
+                              ...card.todos,
+                              {
+                                id: generateId(),
+                                text,
+                                completed: false,
+                                createdAt: new Date(),
+                              },
+                            ],
+                          }
+                        : card
+                    ),
+                  }
+                : area
+            ),
+          }
+        }),
 
       toggleTodo: (
-        practiceAreaId: string,
+        areaId: string,
         taskCardId: string,
-        todoId: string
+        todoId: string,
+        areaType: AreaType
       ) =>
-        set((state) => ({
-          practiceAreas: state.practiceAreas.map((area) =>
-            area.id === practiceAreaId
-              ? {
-                  ...area,
-                  taskCards: area.taskCards.map((card) =>
-                    card.id === taskCardId
-                      ? {
-                          ...card,
-                          todos: card.todos.map((todo) =>
-                            todo.id === todoId
-                              ? { ...todo, completed: !todo.completed }
-                              : todo
-                          ),
-                        }
-                      : card
-                  ),
-                }
-              : area
-          ),
-        })),
+        set((state) => {
+          const targetArray =
+            areaType === 'practice' ? 'practiceAreas' : 'projects'
+          return {
+            [targetArray]: state[targetArray].map((area) =>
+              area.id === areaId
+                ? {
+                    ...area,
+                    taskCards: area.taskCards.map((card) =>
+                      card.id === taskCardId
+                        ? {
+                            ...card,
+                            todos: card.todos.map((todo) =>
+                              todo.id === todoId
+                                ? { ...todo, completed: !todo.completed }
+                                : todo
+                            ),
+                          }
+                        : card
+                    ),
+                  }
+                : area
+            ),
+          }
+        }),
 
-      toggleTaskCard: (practiceAreaId: string, taskCardId: string) =>
-        set((state) => ({
-          practiceAreas: state.practiceAreas.map((area) =>
-            area.id === practiceAreaId
-              ? {
-                  ...area,
-                  taskCards: area.taskCards.map((card) =>
-                    card.id === taskCardId
-                      ? { ...card, isExpanded: !card.isExpanded }
-                      : card
-                  ),
-                }
-              : area
-          ),
-        })),
+      toggleTaskCard: (
+        areaId: string,
+        taskCardId: string,
+        areaType: AreaType
+      ) =>
+        set((state) => {
+          const targetArray =
+            areaType === 'practice' ? 'practiceAreas' : 'projects'
+          return {
+            [targetArray]: state[targetArray].map((area) =>
+              area.id === areaId
+                ? {
+                    ...area,
+                    taskCards: area.taskCards.map((card) =>
+                      card.id === taskCardId
+                        ? { ...card, isExpanded: !card.isExpanded }
+                        : card
+                    ),
+                  }
+                : area
+            ),
+          }
+        }),
     }),
     {
       name: 'fretplan-storage', // localStorage key
       partialize: (state) => ({
         practiceAreas: state.practiceAreas,
+        projects: state.projects,
         activePracticeAreaId: state.activePracticeAreaId,
+        activeProjectId: state.activeProjectId,
       }),
     }
   )
 )
-

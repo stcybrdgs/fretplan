@@ -23,31 +23,54 @@ export interface PracticeArea {
   createdAt: Date
 }
 
+export interface ProjectArea {
+  id: string
+  name: string
+  color: 'green' | 'purple' | 'orange' | 'blue' | 'red'
+  taskCards: TaskCard[]
+  createdAt: Date
+}
+
 // UI state types
-export type ViewType = 'practice-area' | 'dashboard' | 'tags'
+export type ViewType = 'practice-area' | 'project-area' | 'dashboard' | 'tags'
+export type AreaType = 'practice' | 'project'
 
 export interface AppState {
   // Navigation state
   activePracticeAreaId: string | null
+  activeProjectId: string | null
   activeView: ViewType
   isSidebarOpen: boolean
 
   // Data state
   practiceAreas: PracticeArea[]
+  projects: ProjectArea[]
 
   // Actions
   setActivePracticeArea: (id: string) => void
+  setActiveProject: (id: string) => void
   setActiveView: (view: ViewType) => void
   setSidebarOpen: (isOpen: boolean) => void
 
   // CRUD operations
   addPracticeArea: (name: string, color: PracticeArea['color']) => void
-  addTaskCard: (practiceAreaId: string, title: string) => void
-  addTodo: (practiceAreaId: string, taskCardId: string, text: string) => void
-  toggleTodo: (
-    practiceAreaId: string,
+  addProject: (name: string, color: ProjectArea['color']) => void
+  addTaskCard: (areaId: string, title: string, areaType: AreaType) => void
+  addTodo: (
+    areaId: string,
     taskCardId: string,
-    todoId: string
+    text: string,
+    areaType: AreaType
   ) => void
-  toggleTaskCard: (practiceAreaId: string, taskCardId: string) => void
+  toggleTodo: (
+    areaId: string,
+    taskCardId: string,
+    todoId: string,
+    areaType: AreaType
+  ) => void
+  toggleTaskCard: (
+    areaId: string,
+    taskCardId: string,
+    areaType: AreaType
+  ) => void
 }

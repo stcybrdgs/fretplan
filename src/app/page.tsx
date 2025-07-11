@@ -18,13 +18,17 @@ export default function Home() {
   // Zustand store
   const {
     practiceAreas,
+    projects,
     activePracticeAreaId,
+    activeProjectId,
     activeView,
     isSidebarOpen,
     setActivePracticeArea,
+    setActiveProject,
     setActiveView,
     setSidebarOpen,
     addPracticeArea,
+    addProject,
     addTaskCard,
     addTodo,
     toggleTodo,
@@ -63,10 +67,15 @@ export default function Home() {
     setSidebarOpen(!isSidebarOpen)
   }
 
-  // Get active practice area data
+  // Get active area data (either practice area or project)
   const activePracticeArea = practiceAreas.find(
     (area) => area.id === activePracticeAreaId
   )
+  const activeProject = projects.find(
+    (project) => project.id === activeProjectId
+  )
+  const activeArea = activePracticeArea || activeProject
+  const activeAreaType = activePracticeArea ? 'practice' : 'project'
 
   // Get color class for practice area dots
   const getColorClass = (color: string) => {
@@ -89,23 +98,37 @@ export default function Home() {
     }
   }
 
+  // Handle adding new project
+  const handleAddProject = () => {
+    const name = prompt('Enter project name:')
+    if (name) {
+      addProject(name, 'purple')
+    }
+  }
+
   // Handle adding new task card
   const handleAddTaskCard = () => {
-    if (!activePracticeAreaId) return
+    const currentAreaId = activePracticeAreaId || activeProjectId
+    if (!currentAreaId) return
     const title = prompt('Enter task card title:')
     if (title) {
-      addTaskCard(activePracticeAreaId, title)
+      addTaskCard(
+        currentAreaId,
+        title,
+        activeAreaType as 'practice' | 'project'
+      )
     }
   }
 
   // Handle adding new todo
-  const handleAddTodo = (
-    practiceAreaId: string,
-    taskCardId: string,
-    text: string
-  ) => {
+  const handleAddTodo = (areaId: string, taskCardId: string, text: string) => {
     if (text.trim()) {
-      addTodo(practiceAreaId, taskCardId, text)
+      addTodo(
+        areaId,
+        taskCardId,
+        text,
+        activeAreaType as 'practice' | 'project'
+      )
     }
   }
 
@@ -198,17 +221,33 @@ export default function Home() {
             <div className='pt-4 mt-4 border-t border-gray-200 dark:border-gray-700'>
               <div className='text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-3 flex items-center justify-between'>
                 Projects
-                <button className='text-gray-900 dark:text-white p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors'>
+                <button
+                  onClick={handleAddProject}
+                  className='text-gray-900 dark:text-white p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors'
+                >
                   <Plus className='w-4 h-4' />
                 </button>
               </div>
-              <button
-                onClick={() => setActiveView('practice-area')}
-                className='flex items-center space-x-3 w-full text-left text-gray-900 dark:text-white p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 bg-purple-50 dark:bg-purple-900/20 transition-colors'
-              >
-                <span className='w-2 h-2 bg-purple-600 rounded-full'></span>
-                <span>Original #1</span>
-              </button>
+
+              {/* Dynamic Projects */}
+              {projects.map((project) => (
+                <button
+                  key={project.id}
+                  onClick={() => setActiveProject(project.id)}
+                  className={`flex items-center space-x-3 w-full text-left p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
+                    activeProjectId === project.id
+                      ? 'bg-purple-50 dark:bg-purple-900/20 text-gray-900 dark:text-white'
+                      : 'text-gray-900 dark:text-white'
+                  }`}
+                >
+                  <span
+                    className={`w-2 h-2 ${getColorClass(
+                      project.color
+                    )} rounded-full`}
+                  ></span>
+                  <span>{project.name}</span>
+                </button>
+              ))}
             </div>
 
             {/* Analyze Section */}
@@ -244,132 +283,145 @@ export default function Home() {
         {/* Main Content */}
         <main className='flex-1 md:ml-64 p-6 bg-gray-50 dark:bg-gray-900 min-h-screen'>
           <div className='max-w-4xl mx-auto'>
-            {activeView === 'practice-area' && activePracticeArea && (
-              <>
-                {/* Page Header */}
-                <div className='mb-6'>
-                  <h2 className='text-2xl font-bold text-gray-900 dark:text-white mb-2'>
-                    {activePracticeArea.name}
-                  </h2>
-                  <p className='text-gray-600 dark:text-gray-400'>
-                    Plan your practice, track your progress
-                  </p>
-                </div>
+            {(activeView === 'practice-area' ||
+              activeView === 'project-area') &&
+              activeArea && (
+                <>
+                  {/* Page Header */}
+                  <div className='mb-6'>
+                    <h2 className='text-2xl font-bold text-gray-900 dark:text-white mb-2'>
+                      {activeArea.name}
+                    </h2>
+                    <p className='text-gray-600 dark:text-gray-400'>
+                      {activeView === 'practice-area'
+                        ? 'Plan your practice, track your progress'
+                        : 'Organize your creative projects'}
+                    </p>
+                  </div>
 
-                {/* Add New Card Button */}
-                <div className='mb-6'>
-                  <button
-                    onClick={handleAddTaskCard}
-                    className='bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors'
-                  >
-                    <Plus className='w-4 h-4' />
-                    <span>Add Practice Card</span>
-                  </button>
-                </div>
-
-                {/* Task Cards */}
-                <div className='space-y-4'>
-                  {activePracticeArea.taskCards.map((card) => (
-                    <div
-                      key={card.id}
-                      className='bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm'
+                  {/* Add New Card Button */}
+                  <div className='mb-6'>
+                    <button
+                      onClick={handleAddTaskCard}
+                      className='bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors'
                     >
+                      <Plus className='w-4 h-4' />
+                      <span>
+                        {activeView === 'practice-area'
+                          ? 'Add Practice Card'
+                          : 'Add Project Card'}
+                      </span>
+                    </button>
+                  </div>
+
+                  {/* Task Cards */}
+                  <div className='space-y-4'>
+                    {activeArea.taskCards.map((card) => (
                       <div
-                        className='p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 transition-colors'
-                        onClick={() =>
-                          toggleTaskCard(activePracticeArea.id, card.id)
-                        }
+                        key={card.id}
+                        className='bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm'
                       >
-                        <div className='flex items-center space-x-3'>
-                          <span
-                            className={`w-3 h-3 ${getColorClass(
-                              card.color
-                            )} rounded-full`}
-                          ></span>
-                          <h3 className='text-lg font-medium text-gray-900 dark:text-white'>
-                            {card.title}
-                          </h3>
+                        <div
+                          className='p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 transition-colors'
+                          onClick={() =>
+                            toggleTaskCard(
+                              activeArea.id,
+                              card.id,
+                              activeAreaType as 'practice' | 'project'
+                            )
+                          }
+                        >
+                          <div className='flex items-center space-x-3'>
+                            <span
+                              className={`w-3 h-3 ${getColorClass(
+                                card.color
+                              )} rounded-full`}
+                            ></span>
+                            <h3 className='text-lg font-medium text-gray-900 dark:text-white'>
+                              {card.title}
+                            </h3>
+                          </div>
+                          {card.isExpanded ? (
+                            <ChevronDown className='w-5 h-5 text-gray-500 dark:text-gray-400' />
+                          ) : (
+                            <ChevronRight className='w-5 h-5 text-gray-500 dark:text-gray-400' />
+                          )}
                         </div>
-                        {card.isExpanded ? (
-                          <ChevronDown className='w-5 h-5 text-gray-500 dark:text-gray-400' />
-                        ) : (
-                          <ChevronRight className='w-5 h-5 text-gray-500 dark:text-gray-400' />
-                        )}
-                      </div>
 
-                      {card.isExpanded && (
-                        <div className='p-4 space-y-3'>
-                          {/* Todos */}
-                          {card.todos.map((todo) => (
-                            <div
-                              key={todo.id}
-                              className='flex items-center space-x-3'
-                            >
-                              <input
-                                type='checkbox'
-                                checked={todo.completed}
-                                onChange={() =>
-                                  toggleTodo(
-                                    activePracticeArea.id,
-                                    card.id,
-                                    todo.id
-                                  )
-                                }
-                                className='w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500'
-                              />
-                              <span
-                                className={`${
-                                  todo.completed
-                                    ? 'text-gray-500 dark:text-gray-400 line-through'
-                                    : 'text-gray-900 dark:text-white'
-                                }`}
+                        {card.isExpanded && (
+                          <div className='p-4 space-y-3'>
+                            {/* Todos */}
+                            {card.todos.map((todo) => (
+                              <div
+                                key={todo.id}
+                                className='flex items-center space-x-3'
                               >
-                                {todo.text}
-                              </span>
-                            </div>
-                          ))}
+                                <input
+                                  type='checkbox'
+                                  checked={todo.completed}
+                                  onChange={() =>
+                                    toggleTodo(
+                                      activeArea.id,
+                                      card.id,
+                                      todo.id,
+                                      activeAreaType as 'practice' | 'project'
+                                    )
+                                  }
+                                  className='w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500'
+                                />
+                                <span
+                                  className={`${
+                                    todo.completed
+                                      ? 'text-gray-500 dark:text-gray-400 line-through'
+                                      : 'text-gray-900 dark:text-white'
+                                  }`}
+                                >
+                                  {todo.text}
+                                </span>
+                              </div>
+                            ))}
 
-                          {/* Add new todo */}
-                          <div className='flex items-center space-x-2 mt-4 pt-3 border-t border-gray-200 dark:border-gray-700'>
-                            <input
-                              type='text'
-                              placeholder='Add new task...'
-                              className='flex-1 p-2 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent'
-                              onKeyPress={(e) => {
-                                if (e.key === 'Enter') {
-                                  const input = e.target as HTMLInputElement
+                            {/* Add new todo */}
+                            <div className='flex items-center space-x-2 mt-4 pt-3 border-t border-gray-200 dark:border-gray-700'>
+                              <input
+                                type='text'
+                                placeholder='Add new task...'
+                                className='flex-1 p-2 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent'
+                                onKeyPress={(e) => {
+                                  if (e.key === 'Enter') {
+                                    const input = e.target as HTMLInputElement
+                                    handleAddTodo(
+                                      activeArea.id,
+                                      card.id,
+                                      input.value
+                                    )
+                                    input.value = ''
+                                  }
+                                }}
+                              />
+                              <button
+                                onClick={(e) => {
+                                  const input = (e.target as HTMLElement)
+                                    .previousElementSibling as HTMLInputElement
                                   handleAddTodo(
-                                    activePracticeArea.id,
+                                    activeArea.id,
                                     card.id,
                                     input.value
                                   )
                                   input.value = ''
-                                }
-                              }}
-                            />
-                            <button
-                              onClick={(e) => {
-                                const input = (e.target as HTMLElement)
-                                  .previousElementSibling as HTMLInputElement
-                                handleAddTodo(
-                                  activePracticeArea.id,
-                                  card.id,
-                                  input.value
-                                )
-                                input.value = ''
-                              }}
-                              className='bg-primary hover:bg-primary-hover text-white px-3 py-2 rounded text-sm transition-colors'
-                            >
-                              Add
-                            </button>
+                                }}
+                                className='bg-primary hover:bg-primary-hover text-white px-3 py-2 rounded text-sm transition-colors'
+                              >
+                                Add
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
 
             {/* Other views */}
             {activeView === 'dashboard' && (
