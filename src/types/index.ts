@@ -10,5 +10,14 @@ export type { ProjectArea } from './project'
 // UI types
 export type { ViewType, AreaType } from './ui'
 
+// Timer types
+export type {
+  TimerStatus,
+  ActiveTimer,
+  TimerSession,
+  TimerState,
+} from './timer'
+
 // Store types
 export type { AppState } from './store'
+

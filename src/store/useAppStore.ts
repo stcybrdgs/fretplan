@@ -1,6 +1,13 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { AppState, PracticeArea, ProjectArea, AreaType } from '@/types'
+import {
+  AppState,
+  PracticeArea,
+  ProjectArea,
+  AreaType,
+  ActiveTimer,
+  TimerSession,
+} from '@/types'
 
 // Helper function to generate IDs
 const generateId = () => Math.random().toString(36).substr(2, 9)
@@ -85,202 +92,375 @@ const initialProjects: ProjectArea[] = [
 
 export const useAppStore = create<AppState>()(
   persist(
-    (set) => ({
-      // Initial state
-      activePracticeAreaId: 'daily-practice',
-      activeProjectId: null,
-      activeView: 'practice-area',
-      isSidebarOpen: false,
-      isDarkMode: false,
-      practiceAreas: initialPracticeAreas,
-      projects: initialProjects,
+    (set) =>
+      ({
+        // Initial state
+        activePracticeAreaId: 'daily-practice',
+        activeProjectId: null,
+        activeView: 'practice-area',
+        isSidebarOpen: false,
+        isDarkMode: false,
+        practiceAreas: initialPracticeAreas,
+        projects: initialProjects,
 
-      // Navigation actions
-      setActivePracticeArea: (id: string) =>
-        set({
-          activePracticeAreaId: id,
-          activeProjectId: null,
-          activeView: 'practice-area',
-        }),
+        // Timer state
+        activeTimer: null,
+        sessions: [],
 
-      setActiveProject: (id: string) =>
-        set({
-          activeProjectId: id,
-          activePracticeAreaId: null,
-          activeView: 'project-area',
-        }),
+        // Navigation actions
+        setActivePracticeArea: (id: string) =>
+          set({
+            activePracticeAreaId: id,
+            activeProjectId: null,
+            activeView: 'practice-area',
+          }),
 
-      setActiveView: (view) => set({ activeView: view }),
+        setActiveProject: (id: string) =>
+          set({
+            activeProjectId: id,
+            activePracticeAreaId: null,
+            activeView: 'project-area',
+          }),
 
-      setSidebarOpen: (isOpen: boolean) => set({ isSidebarOpen: isOpen }),
+        setActiveView: (view) => set({ activeView: view }),
 
-      // Theme action
-      // TODO: Implement flash-free dark mode to prevent hydration mismatch
-      // Consider: blocking script in <head> or next-themes library for production
-      // Current implementation may cause brief light->dark flash on page load
-      toggleTheme: () =>
-        set((state) => {
-          const newDarkMode = !state.isDarkMode
+        setSidebarOpen: (isOpen: boolean) => set({ isSidebarOpen: isOpen }),
 
-          // Update DOM immediately
-          if (newDarkMode) {
-            document.documentElement.classList.add('dark')
-          } else {
-            document.documentElement.classList.remove('dark')
-          }
+        // Theme action
+        // TODO: Implement flash-free dark mode to prevent hydration mismatch
+        // Consider: blocking script in <head> or next-themes library for production
+        // Current implementation may cause brief light->dark flash on page load
+        toggleTheme: () =>
+          set((state) => {
+            const newDarkMode = !state.isDarkMode
 
-          return { isDarkMode: newDarkMode }
-        }),
+            // Update DOM immediately
+            if (newDarkMode) {
+              document.documentElement.classList.add('dark')
+            } else {
+              document.documentElement.classList.remove('dark')
+            }
 
-      // CRUD operations
-      addPracticeArea: (name: string, color: PracticeArea['color']) =>
-        set((state) => ({
-          practiceAreas: [
-            ...state.practiceAreas,
-            {
+            return { isDarkMode: newDarkMode }
+          }),
+
+        // Timer actions
+        startTimer: (
+          areaId,
+          areaName,
+          areaType,
+          taskCardId,
+          taskCardTitle,
+          description = ''
+        ) =>
+          set((state) => {
+            // If there's already an active timer, we need to stop it first
+            let newSessions = state.sessions
+
+            if (state.activeTimer && state.activeTimer.status === 'running') {
+              // Auto-complete the previous session
+              const now = new Date()
+              const duration =
+                now.getTime() -
+                state.activeTimer.startTime.getTime() -
+                (state.activeTimer.pausedTime || 0)
+
+              const completedSession: TimerSession = {
+                id: generateId(),
+                areaId: state.activeTimer.areaId,
+                areaName: state.activeTimer.areaName,
+                areaType: state.activeTimer.areaType,
+                taskCardId: state.activeTimer.taskCardId,
+                taskCardTitle: state.activeTimer.taskCardTitle,
+                description: state.activeTimer.description,
+                startTime: state.activeTimer.startTime,
+                endTime: now,
+                duration,
+                pausedTime: state.activeTimer.pausedTime || 0,
+                createdAt: now,
+              }
+
+              newSessions = [...state.sessions, completedSession]
+            }
+
+            // Create new active timer
+            const newActiveTimer: ActiveTimer = {
               id: generateId(),
-              name,
-              color,
-              taskCards: [],
-              createdAt: new Date(),
-            },
-          ],
-        })),
+              areaId,
+              areaName,
+              areaType,
+              taskCardId,
+              taskCardTitle,
+              description,
+              startTime: new Date(),
+              pausedTime: 0,
+              status: 'running',
+            }
 
-      addProject: (name: string, color: ProjectArea['color']) =>
-        set((state) => ({
-          projects: [
-            ...state.projects,
-            {
+            return {
+              activeTimer: newActiveTimer,
+              sessions: newSessions,
+            }
+          }),
+
+        stopTimer: () =>
+          set((state) => {
+            if (!state.activeTimer) return state
+
+            const now = new Date()
+            const duration =
+              now.getTime() -
+              state.activeTimer.startTime.getTime() -
+              (state.activeTimer.pausedTime || 0)
+
+            const completedSession: TimerSession = {
               id: generateId(),
-              name,
-              color,
-              taskCards: [],
-              createdAt: new Date(),
-            },
-          ],
-        })),
+              areaId: state.activeTimer.areaId,
+              areaName: state.activeTimer.areaName,
+              areaType: state.activeTimer.areaType,
+              taskCardId: state.activeTimer.taskCardId,
+              taskCardTitle: state.activeTimer.taskCardTitle,
+              description: state.activeTimer.description,
+              startTime: state.activeTimer.startTime,
+              endTime: now,
+              duration,
+              pausedTime: state.activeTimer.pausedTime || 0,
+              createdAt: now,
+            }
 
-      addTaskCard: (areaId: string, title: string, areaType: AreaType) =>
-        set((state) => {
-          const targetArray =
-            areaType === 'practice' ? 'practiceAreas' : 'projects'
-          return {
-            [targetArray]: state[targetArray].map((area) =>
-              area.id === areaId
-                ? {
-                    ...area,
-                    taskCards: [
-                      ...area.taskCards,
-                      {
-                        id: generateId(),
-                        title,
-                        isExpanded: true,
-                        color: 'purple',
-                        todos: [],
-                        createdAt: new Date(),
-                      },
-                    ],
-                  }
-                : area
-            ),
-          }
-        }),
+            return {
+              activeTimer: null,
+              sessions: [...state.sessions, completedSession],
+            }
+          }),
 
-      addTodo: (
-        areaId: string,
-        taskCardId: string,
-        text: string,
-        areaType: AreaType
-      ) =>
-        set((state) => {
-          const targetArray =
-            areaType === 'practice' ? 'practiceAreas' : 'projects'
-          return {
-            [targetArray]: state[targetArray].map((area) =>
-              area.id === areaId
-                ? {
-                    ...area,
-                    taskCards: area.taskCards.map((card) =>
-                      card.id === taskCardId
-                        ? {
-                            ...card,
-                            todos: [
-                              ...card.todos,
-                              {
-                                id: generateId(),
-                                text,
-                                completed: false,
-                                createdAt: new Date(),
-                              },
-                            ],
-                          }
-                        : card
-                    ),
-                  }
-                : area
-            ),
-          }
-        }),
+        pauseTimer: () =>
+          set((state) => {
+            if (!state.activeTimer || state.activeTimer.status !== 'running')
+              return state
 
-      toggleTodo: (
-        areaId: string,
-        taskCardId: string,
-        todoId: string,
-        areaType: AreaType
-      ) =>
-        set((state) => {
-          const targetArray =
-            areaType === 'practice' ? 'practiceAreas' : 'projects'
-          return {
-            [targetArray]: state[targetArray].map((area) =>
-              area.id === areaId
-                ? {
-                    ...area,
-                    taskCards: area.taskCards.map((card) =>
-                      card.id === taskCardId
-                        ? {
-                            ...card,
-                            todos: card.todos.map((todo) =>
-                              todo.id === todoId
-                                ? { ...todo, completed: !todo.completed }
-                                : todo
-                            ),
-                          }
-                        : card
-                    ),
-                  }
-                : area
-            ),
-          }
-        }),
+            return {
+              activeTimer: {
+                ...state.activeTimer,
+                status: 'paused' as const,
+                pauseStartTime: new Date(), // Track when pause started
+              },
+            }
+          }),
 
-      toggleTaskCard: (
-        areaId: string,
-        taskCardId: string,
-        areaType: AreaType
-      ) =>
-        set((state) => {
-          const targetArray =
-            areaType === 'practice' ? 'practiceAreas' : 'projects'
-          return {
-            [targetArray]: state[targetArray].map((area) =>
-              area.id === areaId
-                ? {
-                    ...area,
-                    taskCards: area.taskCards.map((card) =>
-                      card.id === taskCardId
-                        ? { ...card, isExpanded: !card.isExpanded }
-                        : card
-                    ),
-                  }
-                : area
-            ),
-          }
-        }),
-    }),
+        resumeTimer: () =>
+          set((state) => {
+            if (!state.activeTimer || state.activeTimer.status !== 'paused')
+              return state
 
-    // Persist configuration
+            const now = new Date()
+            const pausedDuration =
+              now.getTime() -
+              (state.activeTimer.pauseStartTime?.getTime() || now.getTime())
+
+            return {
+              activeTimer: {
+                ...state.activeTimer,
+                pausedTime:
+                  (state.activeTimer.pausedTime || 0) + pausedDuration,
+                status: 'running' as const,
+                pauseStartTime: undefined,
+              },
+            }
+          }),
+
+        completeSession: () =>
+          set((state) => {
+            if (!state.activeTimer) return state
+
+            // Same logic as stopTimer but for explicit completion
+            const now = new Date()
+            const duration =
+              now.getTime() -
+              state.activeTimer.startTime.getTime() -
+              (state.activeTimer.pausedTime || 0)
+
+            const completedSession: TimerSession = {
+              id: generateId(),
+              areaId: state.activeTimer.areaId,
+              areaName: state.activeTimer.areaName,
+              areaType: state.activeTimer.areaType,
+              taskCardId: state.activeTimer.taskCardId,
+              taskCardTitle: state.activeTimer.taskCardTitle,
+              description: state.activeTimer.description,
+              startTime: state.activeTimer.startTime,
+              endTime: now,
+              duration,
+              pausedTime: state.activeTimer.pausedTime || 0,
+              createdAt: now,
+            }
+
+            return {
+              activeTimer: null,
+              sessions: [...state.sessions, completedSession],
+            }
+          }),
+
+        getSessionsForArea: (areaId) => {
+          const state = useAppStore.getState()
+          return state.sessions.filter((session) => session.areaId === areaId)
+        },
+
+        getSessionsForDateRange: (startDate, endDate) => {
+          const state = useAppStore.getState()
+          return state.sessions.filter(
+            (session) =>
+              session.startTime >= startDate && session.startTime <= endDate
+          )
+        },
+
+        // CRUD operations
+        addPracticeArea: (name: string, color: PracticeArea['color']) =>
+          set((state) => ({
+            practiceAreas: [
+              ...state.practiceAreas,
+              {
+                id: generateId(),
+                name,
+                color,
+                taskCards: [],
+                createdAt: new Date(),
+              },
+            ],
+          })),
+
+        addProject: (name: string, color: ProjectArea['color']) =>
+          set((state) => ({
+            projects: [
+              ...state.projects,
+              {
+                id: generateId(),
+                name,
+                color,
+                taskCards: [],
+                createdAt: new Date(),
+              },
+            ],
+          })),
+
+        addTaskCard: (areaId: string, title: string, areaType: AreaType) =>
+          set((state) => {
+            const targetArray =
+              areaType === 'practice' ? 'practiceAreas' : 'projects'
+            return {
+              [targetArray]: state[targetArray].map((area) =>
+                area.id === areaId
+                  ? {
+                      ...area,
+                      taskCards: [
+                        ...area.taskCards,
+                        {
+                          id: generateId(),
+                          title,
+                          isExpanded: true,
+                          color: 'purple',
+                          todos: [],
+                          createdAt: new Date(),
+                        },
+                      ],
+                    }
+                  : area
+              ),
+            }
+          }),
+
+        addTodo: (
+          areaId: string,
+          taskCardId: string,
+          text: string,
+          areaType: AreaType
+        ) =>
+          set((state) => {
+            const targetArray =
+              areaType === 'practice' ? 'practiceAreas' : 'projects'
+            return {
+              [targetArray]: state[targetArray].map((area) =>
+                area.id === areaId
+                  ? {
+                      ...area,
+                      taskCards: area.taskCards.map((card) =>
+                        card.id === taskCardId
+                          ? {
+                              ...card,
+                              todos: [
+                                ...card.todos,
+                                {
+                                  id: generateId(),
+                                  text,
+                                  completed: false,
+                                  createdAt: new Date(),
+                                },
+                              ],
+                            }
+                          : card
+                      ),
+                    }
+                  : area
+              ),
+            }
+          }),
+
+        toggleTodo: (
+          areaId: string,
+          taskCardId: string,
+          todoId: string,
+          areaType: AreaType
+        ) =>
+          set((state) => {
+            const targetArray =
+              areaType === 'practice' ? 'practiceAreas' : 'projects'
+            return {
+              [targetArray]: state[targetArray].map((area) =>
+                area.id === areaId
+                  ? {
+                      ...area,
+                      taskCards: area.taskCards.map((card) =>
+                        card.id === taskCardId
+                          ? {
+                              ...card,
+                              todos: card.todos.map((todo) =>
+                                todo.id === todoId
+                                  ? { ...todo, completed: !todo.completed }
+                                  : todo
+                              ),
+                            }
+                          : card
+                      ),
+                    }
+                  : area
+              ),
+            }
+          }),
+
+        toggleTaskCard: (
+          areaId: string,
+          taskCardId: string,
+          areaType: AreaType
+        ) =>
+          set((state) => {
+            const targetArray =
+              areaType === 'practice' ? 'practiceAreas' : 'projects'
+            return {
+              [targetArray]: state[targetArray].map((area) =>
+                area.id === areaId
+                  ? {
+                      ...area,
+                      taskCards: area.taskCards.map((card) =>
+                        card.id === taskCardId
+                          ? { ...card, isExpanded: !card.isExpanded }
+                          : card
+                      ),
+                    }
+                  : area
+              ),
+            }
+          }),
+      } as AppState),
     {
       name: 'fretplan-storage', // localStorage key
       partialize: (state) => ({
@@ -289,6 +469,8 @@ export const useAppStore = create<AppState>()(
         activePracticeAreaId: state.activePracticeAreaId,
         activeProjectId: state.activeProjectId,
         isDarkMode: state.isDarkMode,
+        sessions: state.sessions, // Persist completed sessions
+        // Note: activeTimer is not persisted - timers don't survive page refresh
         // TODO: Fix hydration flicker - theme resets to light on page refresh
         // Plan: Integrate next-themes library or implement blocking script in <head>
         // For now, accepting UX tradeoff to maintain centralized state architecture

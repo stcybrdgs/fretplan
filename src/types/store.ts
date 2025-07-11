@@ -2,8 +2,9 @@
 import { PracticeArea } from './practice'
 import { ProjectArea } from './project'
 import { ViewType, AreaType } from './ui'
+import { TimerState } from './timer'
 
-export interface AppState {
+export interface AppState extends TimerState {
   // Navigation state
   activePracticeAreaId: string | null
   activeProjectId: string | null
@@ -46,3 +47,4 @@ export interface AppState {
     areaType: AreaType
   ) => void
 }
+
