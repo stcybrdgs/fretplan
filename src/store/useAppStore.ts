@@ -6,7 +6,7 @@ import {
   ProjectArea,
   AreaType,
   ActiveTimer,
-  TimerSession,
+  TimerDayRecord,
 } from '@/types'
 
 // Helper function to generate IDs
@@ -17,17 +17,24 @@ const getTodayDateString = () => new Date().toISOString().split('T')[0]
 
 // Helper function to add duration to today's total for a todo
 const addToTodaysTotal = (
-  state: any,
+  state: AppState,
   todoId: string,
   duration: number,
-  todoInfo: any
+  todoInfo: {
+    areaId: string
+    areaName: string
+    areaType: 'practice' | 'project'
+    taskCardId: string
+    taskCardName: string
+    todoName: string
+  }
 ) => {
   const today = getTodayDateString()
   const todaysTimers = state.timers[today] || []
 
   // Find existing timer record for this todo today
   const existingTimerIndex = todaysTimers.findIndex(
-    (timer: any) => timer.todoId === todoId
+    (timer: TimerDayRecord) => timer.todoId === todoId
   )
 
   if (existingTimerIndex >= 0) {

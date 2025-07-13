@@ -15,9 +15,6 @@ import {
 import { useAppStore } from '@/store/useAppStore'
 
 export default function Home() {
-  // State for current time (for timer display)
-  const [currentTime, setCurrentTime] = useState(new Date())
-
   // Zustand store
   const {
     practiceAreas,
@@ -45,10 +42,11 @@ export default function Home() {
     handleMidnightTransition,
   } = useAppStore()
 
-  // Update current time every second for timer display
+  // Force re-render every second for timer display updates
+  const [, forceUpdate] = useState({})
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentTime(new Date())
+      forceUpdate({}) // Trigger re-render for timer display
     }, 1000)
 
     return () => clearInterval(interval)

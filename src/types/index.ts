@@ -14,7 +14,7 @@ export type { ViewType, AreaType } from './ui'
 export type {
   TimerStatus,
   ActiveTimer,
-  TimerSession,
+  TimerDayRecord,
   TimerState,
 } from './timer'
 
