@@ -13,6 +13,7 @@ import {
   Square,
 } from 'lucide-react'
 import { useAppStore } from '@/store/useAppStore'
+import { PracticeArea, ProjectArea } from '@/types'
 
 export default function Home() {
   // Zustand store
@@ -143,10 +144,10 @@ export default function Home() {
 
   // Get active area data (either practice area or project)
   const activePracticeArea = practiceAreas.find(
-    (area) => area.id === activePracticeAreaId
+    (area: PracticeArea) => area.id === activePracticeAreaId
   )
   const activeProject = projects.find(
-    (project) => project.id === activeProjectId
+    (project: ProjectArea) => project.id === activeProjectId
   )
   const activeArea = activePracticeArea || activeProject
   const activeAreaType = activePracticeArea ? 'practice' : 'project'
