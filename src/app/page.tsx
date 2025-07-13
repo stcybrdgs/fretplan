@@ -26,6 +26,7 @@ export default function Home() {
     isSidebarOpen,
     isDarkMode,
     activeTimer,
+    timers,
     setActivePracticeArea,
     setActiveProject,
     setActiveView,
@@ -39,7 +40,6 @@ export default function Home() {
     toggleTaskCard,
     startTimer,
     stopTimer,
-    getTodaysTotalForTodo,
     handleMidnightTransition,
   } = useAppStore()
 
@@ -98,7 +98,10 @@ export default function Home() {
 
   const getDisplayTimeForTodo = (todoId: string) => {
     // Get today's accumulated time for this todo
-    const todaysTotal = getTodaysTotalForTodo(todoId)
+    const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
+    const todaysTimers = timers[today] || []
+    const todoTimer = todaysTimers.find((timer) => timer.todoId === todoId)
+    const todaysTotal = todoTimer ? todoTimer.totalDuration : 0
 
     // If this todo has an active timer, add the current session time
     if (isTimerActiveForTodo(todoId) && activeTimer) {
