@@ -21,6 +21,8 @@ export interface TimerSession {
   areaType: 'practice' | 'project'
   taskCardId: string
   taskCardName: string
+  todoId: string
+  todoName: string
   startTime: Date
   endTime: Date
   duration: number // Total duration in milliseconds
