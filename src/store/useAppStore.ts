@@ -310,18 +310,6 @@ export const useAppStore = create<AppState>()(
             }
           }),
 
-        // Daily timer management functions
-        getTodaysTotalForTodo: (todoId) => {
-          // This function will be called with the current state context
-          // so we can access state directly without useAppStore.getState()
-          return 0 // Will be implemented properly when called
-        },
-
-        getTimersForDate: (date) => {
-          // This function will be called with the current state context
-          return [] // Will be implemented properly when called
-        },
-
         handleMidnightTransition: () =>
           set((state) => ({
             midnightFlag: state.midnightFlag === 0 ? 1 : 0, // Toggle between 0 and 1

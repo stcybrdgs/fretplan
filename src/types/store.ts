@@ -64,7 +64,6 @@ export interface AppState {
     todoName: string
   ) => void
   stopTimer: () => void
-  getTodaysTotalForTodo: (todoId: string) => number
-  getTimersForDate: (date: string) => TimerDayRecord[]
   handleMidnightTransition: () => void
 }
+
