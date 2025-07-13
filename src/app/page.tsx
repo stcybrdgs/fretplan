@@ -13,7 +13,7 @@ import {
   Square,
 } from 'lucide-react'
 import { useAppStore } from '@/store/useAppStore'
-import { PracticeArea, ProjectArea } from '@/types'
+import { PracticeArea, ProjectArea, TaskCard, Todo } from '@/types'
 
 export default function Home() {
   // Zustand store
@@ -268,7 +268,7 @@ export default function Home() {
             </div>
 
             {/* Dynamic Practice Areas */}
-            {practiceAreas.map((area) => (
+            {practiceAreas.map((area: PracticeArea) => (
               <button
                 key={area.id}
                 onClick={() => setActivePracticeArea(area.id)}
@@ -300,7 +300,7 @@ export default function Home() {
               </div>
 
               {/* Dynamic Projects */}
-              {projects.map((project) => (
+              {projects.map((project: ProjectArea) => (
                 <button
                   key={project.id}
                   onClick={() => setActiveProject(project.id)}
@@ -386,7 +386,7 @@ export default function Home() {
 
                   {/* Task Cards */}
                   <div className='space-y-4'>
-                    {activeArea.taskCards.map((card) => (
+                    {activeArea.taskCards.map((card: TaskCard) => (
                       <div
                         key={card.id}
                         className='bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 ease-in-out hover:border-purple-200 dark:hover:border-purple-700'
@@ -441,7 +441,7 @@ export default function Home() {
                         >
                           <div className='p-4 space-y-3'>
                             {/* Todos */}
-                            {card.todos.map((todo) => (
+                            {card.todos.map((todo: Todo) => (
                               <div
                                 key={todo.id}
                                 className={`flex items-center space-x-3 transition-all duration-300 ease-in-out rounded-lg p-2 -mx-2 ${
