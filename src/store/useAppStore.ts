@@ -12,6 +12,64 @@ import {
 // Helper function to generate IDs
 const generateId = () => Math.random().toString(36).substr(2, 9)
 
+// Helper function to get today's date string
+const getTodayDateString = () => new Date().toISOString().split('T')[0]
+
+// Helper function to add duration to today's total for a todo
+const addToTodaysTotal = (
+  state: any,
+  todoId: string,
+  duration: number,
+  todoInfo: any
+) => {
+  const today = getTodayDateString()
+  const todaysTimers = state.timers[today] || []
+
+  // Find existing timer record for this todo today
+  const existingTimerIndex = todaysTimers.findIndex(
+    (timer: any) => timer.todoId === todoId
+  )
+
+  if (existingTimerIndex >= 0) {
+    // Update existing record
+    const updatedTimers = [...todaysTimers]
+    updatedTimers[existingTimerIndex] = {
+      ...updatedTimers[existingTimerIndex],
+      totalDuration: updatedTimers[existingTimerIndex].totalDuration + duration,
+    }
+
+    return {
+      ...state,
+      timers: {
+        ...state.timers,
+        [today]: updatedTimers,
+      },
+    }
+  } else {
+    // Create new record for this todo today
+    const newTimerRecord = {
+      id: generateId(),
+      createdAt: new Date(),
+      areaId: todoInfo.areaId,
+      areaName: todoInfo.areaName,
+      areaType: todoInfo.areaType,
+      taskCardId: todoInfo.taskCardId,
+      taskCardName: todoInfo.taskCardName,
+      todoId: todoId,
+      todoName: todoInfo.todoName,
+      totalDuration: duration,
+    }
+
+    return {
+      ...state,
+      timers: {
+        ...state.timers,
+        [today]: [...todaysTimers, newTimerRecord],
+      },
+    }
+  }
+}
+
 // Initial mock data with updated interface
 const initialPracticeAreas: PracticeArea[] = [
   {
@@ -105,7 +163,8 @@ export const useAppStore = create<AppState>()(
 
         // Timer state
         activeTimer: null,
-        sessions: [],
+        timers: {}, // Daily timer records organized by date
+        midnightFlag: 0 as 0 | 1, // Toggles between 0 and 1 at midnight
 
         // Navigation actions
         setActivePracticeArea: (id: string) =>
@@ -155,34 +214,34 @@ export const useAppStore = create<AppState>()(
           todoName
         ) =>
           set((state) => {
-            // If there's already an active timer, auto-stop it first (no confirmation)
-            let newSessions = state.sessions
-
+            // If there's already an active timer, auto-stop it first
             if (state.activeTimer && state.activeTimer.status === 'running') {
-              // Auto-complete the previous session
               const now = new Date()
               const duration =
                 now.getTime() - state.activeTimer.startTime.getTime()
 
-              const completedSession: TimerSession = {
-                id: generateId(),
-                areaId: state.activeTimer.areaId,
-                areaName: state.activeTimer.areaName,
-                areaType: state.activeTimer.areaType,
-                taskCardId: state.activeTimer.taskCardId,
-                taskCardName: state.activeTimer.taskCardName,
-                todoId: state.activeTimer.todoId,
-                todoName: state.activeTimer.todoName,
-                startTime: state.activeTimer.startTime,
-                endTime: now,
-                duration,
-                createdAt: now,
+              // Check if midnight occurred during this session
+              if (state.activeTimer.midnightSnapshot !== state.midnightFlag) {
+                // Handle cross-midnight session (TODO: implement splitSessionAcrossMidnight)
+              } else {
+                // Normal single-day session - add to today's total
+                state = addToTodaysTotal(
+                  state,
+                  state.activeTimer.todoId,
+                  duration,
+                  {
+                    areaId: state.activeTimer.areaId,
+                    areaName: state.activeTimer.areaName,
+                    areaType: state.activeTimer.areaType,
+                    taskCardId: state.activeTimer.taskCardId,
+                    taskCardName: state.activeTimer.taskCardName,
+                    todoName: state.activeTimer.todoName,
+                  }
+                )
               }
-
-              newSessions = [...state.sessions, completedSession]
             }
 
-            // Create new active timer
+            // Create new active timer with midnight snapshot
             const newActiveTimer: ActiveTimer = {
               id: generateId(),
               areaId,
@@ -194,85 +253,73 @@ export const useAppStore = create<AppState>()(
               todoName,
               startTime: new Date(),
               status: 'running',
+              midnightSnapshot: state.midnightFlag, // Capture current midnight flag
             }
 
             return {
+              ...state,
               activeTimer: newActiveTimer,
-              sessions: newSessions,
             }
           }),
 
         stopTimer: () =>
           set((state) => {
-            if (!state.activeTimer) return state
+            if (!state.activeTimer) {
+              return state
+            }
 
             const now = new Date()
             const duration =
               now.getTime() - state.activeTimer.startTime.getTime()
 
-            const completedSession: TimerSession = {
-              id: generateId(),
-              areaId: state.activeTimer.areaId,
-              areaName: state.activeTimer.areaName,
-              areaType: state.activeTimer.areaType,
-              taskCardId: state.activeTimer.taskCardId,
-              taskCardName: state.activeTimer.taskCardName,
-              todoId: state.activeTimer.todoId,
-              todoName: state.activeTimer.todoName,
-              startTime: state.activeTimer.startTime,
-              endTime: now,
-              duration,
-              createdAt: now,
+            // Check if midnight occurred during this session
+            if (state.activeTimer.midnightSnapshot !== state.midnightFlag) {
+              // Handle cross-midnight session (TODO: implement splitSessionAcrossMidnight)
+              console.log(
+                'Cross-midnight session detected - will implement splitting logic'
+              )
+            } else {
+              // Normal single-day session - add to today's total
+              state = addToTodaysTotal(
+                state,
+                state.activeTimer.todoId,
+                duration,
+                {
+                  areaId: state.activeTimer.areaId,
+                  areaName: state.activeTimer.areaName,
+                  areaType: state.activeTimer.areaType,
+                  taskCardId: state.activeTimer.taskCardId,
+                  taskCardName: state.activeTimer.taskCardName,
+                  todoName: state.activeTimer.todoName,
+                }
+              )
             }
-
             return {
+              ...state,
               activeTimer: null,
-              sessions: [...state.sessions, completedSession],
             }
           }),
 
-        completeSession: () =>
-          set((state) => {
-            if (!state.activeTimer) return state
-
-            // Same logic as stopTimer but for explicit completion
-            const now = new Date()
-            const duration =
-              now.getTime() - state.activeTimer.startTime.getTime()
-
-            const completedSession: TimerSession = {
-              id: generateId(),
-              areaId: state.activeTimer.areaId,
-              areaName: state.activeTimer.areaName,
-              areaType: state.activeTimer.areaType,
-              taskCardId: state.activeTimer.taskCardId,
-              taskCardName: state.activeTimer.taskCardName,
-              todoId: state.activeTimer.todoId,
-              todoName: state.activeTimer.todoName,
-              startTime: state.activeTimer.startTime,
-              endTime: now,
-              duration,
-              createdAt: now,
-            }
-
-            return {
-              activeTimer: null,
-              sessions: [...state.sessions, completedSession],
-            }
-          }),
-
-        getSessionsForArea: (areaId) => {
+        // Daily timer management functions
+        getTodaysTotalForTodo: (todoId) => {
           const state = useAppStore.getState()
-          return state.sessions.filter((session) => session.areaId === areaId)
-        },
-
-        getSessionsForDateRange: (startDate, endDate) => {
-          const state = useAppStore.getState()
-          return state.sessions.filter(
-            (session) =>
-              session.startTime >= startDate && session.startTime <= endDate
+          const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
+          const todaysTimers = state.timers[today] || []
+          const todoTimer = todaysTimers.find(
+            (timer) => timer.todoId === todoId
           )
+          return todoTimer ? todoTimer.totalDuration : 0
         },
+
+        getTimersForDate: (date) => {
+          const state = useAppStore.getState()
+          return state.timers[date] || []
+        },
+
+        handleMidnightTransition: () =>
+          set((state) => ({
+            midnightFlag: state.midnightFlag === 0 ? 1 : 0, // Toggle between 0 and 1
+          })),
 
         // CRUD operations
         addPracticeArea: (name: string, color: PracticeArea['color']) =>
@@ -423,13 +470,15 @@ export const useAppStore = create<AppState>()(
       } as AppState),
     {
       name: 'fretplan-storage', // localStorage key
+      // select
       partialize: (state) => ({
         practiceAreas: state.practiceAreas,
         projects: state.projects,
         activePracticeAreaId: state.activePracticeAreaId,
         activeProjectId: state.activeProjectId,
         isDarkMode: state.isDarkMode,
-        sessions: state.sessions, // Persist completed sessions
+        timers: state.timers,
+        midnightFlag: state.midnightFlag,
         // Note: activeTimer is not persisted - timers don't survive page refresh
         // TODO: Fix hydration flicker - theme resets to light on page refresh
         // Plan: Integrate next-themes library or implement blocking script in <head>
@@ -447,3 +496,4 @@ export const useAppStore = create<AppState>()(
     }
   )
 )
+

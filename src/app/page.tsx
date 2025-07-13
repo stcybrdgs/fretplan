@@ -41,6 +41,8 @@ export default function Home() {
     toggleTaskCard,
     startTimer,
     stopTimer,
+    getTodaysTotalForTodo,
+    handleMidnightTransition,
   } = useAppStore()
 
   // Update current time every second for timer display
@@ -51,6 +53,19 @@ export default function Home() {
 
     return () => clearInterval(interval)
   }, [])
+
+  // Midnight detection - check every minute for date change
+  useEffect(() => {
+    const midnightInterval = setInterval(() => {
+      const now = new Date()
+      if (now.getHours() === 0 && now.getMinutes() === 0) {
+        console.log('Midnight detected! Toggling midnight flag...')
+        handleMidnightTransition()
+      }
+    }, 60000) // Check every minute
+
+    return () => clearInterval(midnightInterval)
+  }, [handleMidnightTransition])
 
   // Apply theme on component mount (for initial load)
   useEffect(() => {
@@ -63,7 +78,9 @@ export default function Home() {
 
   // Timer helper functions
   const formatTime = (milliseconds: number) => {
-    const totalSeconds = Math.floor(milliseconds / 1000)
+    // Ensure we never have negative time
+    const safeMilliseconds = Math.max(0, milliseconds)
+    const totalSeconds = Math.floor(safeMilliseconds / 1000)
     const hours = Math.floor(totalSeconds / 3600)
     const minutes = Math.floor((totalSeconds % 3600) / 60)
     const seconds = totalSeconds % 60
@@ -75,7 +92,23 @@ export default function Home() {
 
   const getTimerDuration = (timer: typeof activeTimer) => {
     if (!timer) return 0
-    return currentTime.getTime() - timer.startTime.getTime()
+    // Always use fresh current time, not state-dependent currentTime
+    const now = new Date().getTime()
+    return Math.max(0, now - timer.startTime.getTime())
+  }
+
+  const getDisplayTimeForTodo = (todoId: string) => {
+    // Get today's accumulated time for this todo
+    const todaysTotal = getTodaysTotalForTodo(todoId)
+
+    // If this todo has an active timer, add the current session time
+    if (isTimerActiveForTodo(todoId) && activeTimer) {
+      const currentSessionTime = getTimerDuration(activeTimer)
+      return todaysTotal + currentSessionTime
+    }
+
+    // Otherwise, just show today's total
+    return todaysTotal
   }
 
   const isTimerActiveForTodo = (todoId: string) => {
@@ -463,12 +496,9 @@ export default function Home() {
                                           : 'text-gray-600 dark:text-gray-400'
                                       }`}
                                     >
-                                      {isTimerActiveForTodo(todo.id) &&
-                                      activeTimer
-                                        ? formatTime(
-                                            getTimerDuration(activeTimer)
-                                          )
-                                        : '00:00:00'}
+                                      {formatTime(
+                                        getDisplayTimeForTodo(todo.id)
+                                      )}
                                     </span>
 
                                     {/* Timer control - single icon toggle, disabled if completed */}

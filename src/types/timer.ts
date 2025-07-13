@@ -12,10 +12,13 @@ export interface ActiveTimer {
   todoName: string
   startTime: Date
   status: TimerStatus
+  midnightSnapshot: number // Capture midnightFlag when timer starts
 }
 
-export interface TimerSession {
+// Daily timer record - one per todo per day with accumulated time
+export interface TimerDayRecord {
   id: string
+  createdAt: Date
   areaId: string
   areaName: string
   areaType: 'practice' | 'project'
@@ -23,18 +26,18 @@ export interface TimerSession {
   taskCardName: string
   todoId: string
   todoName: string
-  startTime: Date
-  endTime: Date
-  duration: number // Total duration in milliseconds
-  createdAt: Date
+  totalDuration: number // Accumulated milliseconds for this todo on this day
 }
 
 export interface TimerState {
   // Current active timer (only one can be running)
   activeTimer: ActiveTimer | null
 
-  // Completed sessions for analytics
-  sessions: TimerSession[]
+  // Daily timer records organized by date
+  timers: { [date: string]: TimerDayRecord[] }
+
+  // Midnight detection flag (toggles between 0 and 1)
+  midnightFlag: 0 | 1
 
   // Timer actions
   startTimer: (
@@ -49,9 +52,8 @@ export interface TimerState {
 
   stopTimer: () => void
 
-  // Session management
-  completeSession: () => void
-  getSessionsForArea: (areaId: string) => TimerSession[]
-  getSessionsForDateRange: (startDate: Date, endDate: Date) => TimerSession[]
+  // Daily timer management
+  getTodaysTotalForTodo: (todoId: string) => number
+  getTimersForDate: (date: string) => TimerDayRecord[]
+  handleMidnightTransition: () => void
 }
-

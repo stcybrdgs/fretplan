@@ -1,0 +1,32 @@
+{
+  "timers": {
+    "2025-07-12": [
+      {
+        "id": "szcdphl8j",
+        "createdAt": "2025-07-12T18:11:21.282Z",
+        "areaId": "daily-practice",
+        "areaName": "Daily Practice",
+        "areaType": "practice",
+        "taskCardId": "kq71cl340",
+        "taskCardName": "Bouree",
+        "todoId": "qe9se34nc",
+        "todoName": "Test Bouree",
+        "totalDuration": 81673
+      }
+    ],
+    "2025-07-13": [
+      {
+        "id": "ylj00mush",
+        "createdAt": "2025-07-13T18:02:41.645Z",
+        "areaId": "daily-practice",
+        "areaName": "Daily Practice",
+        "areaType": "practice",
+        "taskCardId": "card-1",
+        "taskCardName": "Test Card",
+        "todoId": "todo-2",
+        "todoName": "Test Todo",
+        "totalDuration": 6361
+      }
+    ]
+  }
+}
