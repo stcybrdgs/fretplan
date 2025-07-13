@@ -1,14 +1,14 @@
 // Practice-related types
 export interface Todo {
   id: string
-  text: string
+  name: string
   completed: boolean
   createdAt: Date
 }
 
 export interface TaskCard {
   id: string
-  title: string
+  name: string
   isExpanded: boolean
   color: 'green' | 'purple' | 'orange' | 'blue' | 'red'
   todos: Todo[]
@@ -22,3 +22,4 @@ export interface PracticeArea {
   taskCards: TaskCard[]
   createdAt: Date
 }
+

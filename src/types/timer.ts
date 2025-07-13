@@ -1,5 +1,5 @@
 // Timer and session tracking types
-export type TimerStatus = 'idle' | 'running' | 'paused'
+export type TimerStatus = 'idle' | 'running'
 
 export interface ActiveTimer {
   id: string
@@ -7,12 +7,11 @@ export interface ActiveTimer {
   areaName: string
   areaType: 'practice' | 'project'
   taskCardId: string
-  taskCardTitle: string
-  description: string // Always present, empty string if not provided
+  taskCardName: string
+  todoId: string
+  todoName: string
   startTime: Date
-  pausedTime?: number // Total paused time in milliseconds
   status: TimerStatus
-  pauseStartTime?: Date
 }
 
 export interface TimerSession {
@@ -21,12 +20,10 @@ export interface TimerSession {
   areaName: string
   areaType: 'practice' | 'project'
   taskCardId: string
-  taskCardTitle: string
-  description: string // Always present, empty string if not provided
+  taskCardName: string
   startTime: Date
   endTime: Date
   duration: number // Total duration in milliseconds
-  pausedTime: number // Total paused time in milliseconds
   createdAt: Date
 }
 
@@ -43,13 +40,12 @@ export interface TimerState {
     areaName: string,
     areaType: 'practice' | 'project',
     taskCardId: string,
-    taskCardTitle: string,
-    description?: string // Optional input, but stored as empty string if not provided
+    taskCardName: string,
+    todoId: string,
+    todoName: string
   ) => void
 
   stopTimer: () => void
-  pauseTimer: () => void
-  resumeTimer: () => void
 
   // Session management
   completeSession: () => void

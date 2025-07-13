@@ -12,7 +12,7 @@ import {
 // Helper function to generate IDs
 const generateId = () => Math.random().toString(36).substr(2, 9)
 
-// Initial mock data
+// Initial mock data with updated interface
 const initialPracticeAreas: PracticeArea[] = [
   {
     id: 'daily-practice',
@@ -22,26 +22,26 @@ const initialPracticeAreas: PracticeArea[] = [
     taskCards: [
       {
         id: 'card-1',
-        title: 'G Dominant Scale Ideas',
+        name: 'G Dominant Scale Ideas',
         isExpanded: true,
         color: 'green',
         createdAt: new Date(),
         todos: [
           {
             id: 'todo-1',
-            text: 'Practice Dm - F - Bb - A progression',
+            name: 'Practice Dm - F - Bb - A progression',
             completed: false,
             createdAt: new Date(),
           },
           {
             id: 'todo-2',
-            text: 'Review tritone substitutions',
+            name: 'Review tritone substitutions',
             completed: true,
             createdAt: new Date(),
           },
           {
             id: 'todo-3',
-            text: 'Apply to "Autumn Leaves" in Bb',
+            name: 'Apply to "Autumn Leaves" in Bb',
             completed: false,
             createdAt: new Date(),
           },
@@ -49,7 +49,7 @@ const initialPracticeAreas: PracticeArea[] = [
       },
       {
         id: 'card-2',
-        title: 'Autumn Leaves - Bb & G Major',
+        name: 'Autumn Leaves - Bb & G Major',
         isExpanded: false,
         color: 'purple',
         createdAt: new Date(),
@@ -150,20 +150,19 @@ export const useAppStore = create<AppState>()(
           areaName,
           areaType,
           taskCardId,
-          taskCardTitle,
-          description = ''
+          taskCardName,
+          todoId,
+          todoName
         ) =>
           set((state) => {
-            // If there's already an active timer, we need to stop it first
+            // If there's already an active timer, auto-stop it first (no confirmation)
             let newSessions = state.sessions
 
             if (state.activeTimer && state.activeTimer.status === 'running') {
               // Auto-complete the previous session
               const now = new Date()
               const duration =
-                now.getTime() -
-                state.activeTimer.startTime.getTime() -
-                (state.activeTimer.pausedTime || 0)
+                now.getTime() - state.activeTimer.startTime.getTime()
 
               const completedSession: TimerSession = {
                 id: generateId(),
@@ -171,12 +170,12 @@ export const useAppStore = create<AppState>()(
                 areaName: state.activeTimer.areaName,
                 areaType: state.activeTimer.areaType,
                 taskCardId: state.activeTimer.taskCardId,
-                taskCardTitle: state.activeTimer.taskCardTitle,
-                description: state.activeTimer.description,
+                taskCardName: state.activeTimer.taskCardName,
+                todoId: state.activeTimer.todoId,
+                todoName: state.activeTimer.todoName,
                 startTime: state.activeTimer.startTime,
                 endTime: now,
                 duration,
-                pausedTime: state.activeTimer.pausedTime || 0,
                 createdAt: now,
               }
 
@@ -190,10 +189,10 @@ export const useAppStore = create<AppState>()(
               areaName,
               areaType,
               taskCardId,
-              taskCardTitle,
-              description,
+              taskCardName,
+              todoId,
+              todoName,
               startTime: new Date(),
-              pausedTime: 0,
               status: 'running',
             }
 
@@ -209,9 +208,7 @@ export const useAppStore = create<AppState>()(
 
             const now = new Date()
             const duration =
-              now.getTime() -
-              state.activeTimer.startTime.getTime() -
-              (state.activeTimer.pausedTime || 0)
+              now.getTime() - state.activeTimer.startTime.getTime()
 
             const completedSession: TimerSession = {
               id: generateId(),
@@ -219,53 +216,18 @@ export const useAppStore = create<AppState>()(
               areaName: state.activeTimer.areaName,
               areaType: state.activeTimer.areaType,
               taskCardId: state.activeTimer.taskCardId,
-              taskCardTitle: state.activeTimer.taskCardTitle,
-              description: state.activeTimer.description,
+              taskCardName: state.activeTimer.taskCardName,
+              todoId: state.activeTimer.todoId,
+              todoName: state.activeTimer.todoName,
               startTime: state.activeTimer.startTime,
               endTime: now,
               duration,
-              pausedTime: state.activeTimer.pausedTime || 0,
               createdAt: now,
             }
 
             return {
               activeTimer: null,
               sessions: [...state.sessions, completedSession],
-            }
-          }),
-
-        pauseTimer: () =>
-          set((state) => {
-            if (!state.activeTimer || state.activeTimer.status !== 'running')
-              return state
-
-            return {
-              activeTimer: {
-                ...state.activeTimer,
-                status: 'paused' as const,
-                pauseStartTime: new Date(), // Track when pause started
-              },
-            }
-          }),
-
-        resumeTimer: () =>
-          set((state) => {
-            if (!state.activeTimer || state.activeTimer.status !== 'paused')
-              return state
-
-            const now = new Date()
-            const pausedDuration =
-              now.getTime() -
-              (state.activeTimer.pauseStartTime?.getTime() || now.getTime())
-
-            return {
-              activeTimer: {
-                ...state.activeTimer,
-                pausedTime:
-                  (state.activeTimer.pausedTime || 0) + pausedDuration,
-                status: 'running' as const,
-                pauseStartTime: undefined,
-              },
             }
           }),
 
@@ -276,9 +238,7 @@ export const useAppStore = create<AppState>()(
             // Same logic as stopTimer but for explicit completion
             const now = new Date()
             const duration =
-              now.getTime() -
-              state.activeTimer.startTime.getTime() -
-              (state.activeTimer.pausedTime || 0)
+              now.getTime() - state.activeTimer.startTime.getTime()
 
             const completedSession: TimerSession = {
               id: generateId(),
@@ -286,12 +246,12 @@ export const useAppStore = create<AppState>()(
               areaName: state.activeTimer.areaName,
               areaType: state.activeTimer.areaType,
               taskCardId: state.activeTimer.taskCardId,
-              taskCardTitle: state.activeTimer.taskCardTitle,
-              description: state.activeTimer.description,
+              taskCardName: state.activeTimer.taskCardName,
+              todoId: state.activeTimer.todoId,
+              todoName: state.activeTimer.todoName,
               startTime: state.activeTimer.startTime,
               endTime: now,
               duration,
-              pausedTime: state.activeTimer.pausedTime || 0,
               createdAt: now,
             }
 
@@ -343,7 +303,7 @@ export const useAppStore = create<AppState>()(
             ],
           })),
 
-        addTaskCard: (areaId: string, title: string, areaType: AreaType) =>
+        addTaskCard: (areaId: string, name: string, areaType: AreaType) =>
           set((state) => {
             const targetArray =
               areaType === 'practice' ? 'practiceAreas' : 'projects'
@@ -356,7 +316,7 @@ export const useAppStore = create<AppState>()(
                         ...area.taskCards,
                         {
                           id: generateId(),
-                          title,
+                          name,
                           isExpanded: true,
                           color: 'purple',
                           todos: [],
@@ -372,7 +332,7 @@ export const useAppStore = create<AppState>()(
         addTodo: (
           areaId: string,
           taskCardId: string,
-          text: string,
+          name: string,
           areaType: AreaType
         ) =>
           set((state) => {
@@ -391,7 +351,7 @@ export const useAppStore = create<AppState>()(
                                 ...card.todos,
                                 {
                                   id: generateId(),
-                                  text,
+                                  name,
                                   completed: false,
                                   createdAt: new Date(),
                                 },
@@ -487,4 +447,3 @@ export const useAppStore = create<AppState>()(
     }
   )
 )
-

@@ -10,38 +10,13 @@ import {
   ChevronDown,
   ChevronRight,
   Play,
-  Pause,
   Square,
-  Clock,
 } from 'lucide-react'
 import { useAppStore } from '@/store/useAppStore'
 
 export default function Home() {
-  // State
-  const [timerDescriptions, setTimerDescriptions] = useState<{
-    [cardId: string]: string
-  }>({})
+  // State for current time (for timer display)
   const [currentTime, setCurrentTime] = useState(new Date())
-  const [sessionDescriptions, setSessionDescriptions] = useState<string[]>([])
-  const [showAutocomplete, setShowAutocomplete] = useState<{
-    [cardId: string]: boolean
-  }>({})
-  const [filteredDescriptions, setFilteredDescriptions] = useState<{
-    [cardId: string]: string[]
-  }>({})
-
-  // Load unique descriptions from sessions on mount
-  useEffect(() => {
-    const store = useAppStore.getState()
-    const uniqueDescriptions = [
-      ...new Set(
-        store.sessions
-          .map((session) => session.description)
-          .filter((desc) => desc.trim() !== '')
-      ),
-    ]
-    setSessionDescriptions(uniqueDescriptions)
-  }, [])
 
   // Zustand store
   const {
@@ -66,8 +41,6 @@ export default function Home() {
     toggleTaskCard,
     startTimer,
     stopTimer,
-    pauseTimer,
-    resumeTimer,
   } = useAppStore()
 
   // Update current time every second for timer display
@@ -88,55 +61,6 @@ export default function Home() {
     }
   }, [isDarkMode])
 
-  // Autocomplete helper functions
-  const handleDescriptionChange = (cardId: string, value: string) => {
-    console.log('Typing:', value)
-    console.log('Available descriptions:', sessionDescriptions)
-
-    setTimerDescriptions((prev) => ({ ...prev, [cardId]: value }))
-
-    // Filter descriptions based on input
-    if (value.trim() === '') {
-      setFilteredDescriptions((prev) => ({ ...prev, [cardId]: [] }))
-      setShowAutocomplete((prev) => ({ ...prev, [cardId]: false }))
-    } else {
-      const filtered = sessionDescriptions.filter((desc) =>
-        desc.toLowerCase().includes(value.toLowerCase())
-      )
-      setFilteredDescriptions((prev) => ({ ...prev, [cardId]: filtered }))
-      setShowAutocomplete((prev) => ({
-        ...prev,
-        [cardId]: filtered.length > 0,
-      }))
-    }
-  }
-
-  const handleDescriptionSelect = (cardId: string, description: string) => {
-    setTimerDescriptions((prev) => ({ ...prev, [cardId]: description }))
-    setShowAutocomplete((prev) => ({ ...prev, [cardId]: false }))
-  }
-
-  const handleDescriptionFocus = (cardId: string) => {
-    const currentValue = timerDescriptions[cardId] || ''
-    if (currentValue.trim() !== '') {
-      const filtered = sessionDescriptions.filter((desc) =>
-        desc.toLowerCase().includes(currentValue.toLowerCase())
-      )
-      setFilteredDescriptions((prev) => ({ ...prev, [cardId]: filtered }))
-      setShowAutocomplete((prev) => ({
-        ...prev,
-        [cardId]: filtered.length > 0,
-      }))
-    }
-  }
-
-  const handleDescriptionBlur = (cardId: string) => {
-    // Delay hiding to allow click on dropdown items
-    setTimeout(() => {
-      setShowAutocomplete((prev) => ({ ...prev, [cardId]: false }))
-    }, 200)
-  }
-
   // Timer helper functions
   const formatTime = (milliseconds: number) => {
     const totalSeconds = Math.floor(milliseconds / 1000)
@@ -144,72 +68,42 @@ export default function Home() {
     const minutes = Math.floor((totalSeconds % 3600) / 60)
     const seconds = totalSeconds % 60
 
-    if (hours > 0) {
-      return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds
-        .toString()
-        .padStart(2, '0')}`
-    }
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`
+    return `${hours.toString().padStart(2, '0')}:${minutes
+      .toString()
+      .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
   }
 
   const getTimerDuration = (timer: typeof activeTimer) => {
     if (!timer) return 0
-    if (timer.status === 'paused') {
-      return timer.startTime.getTime() - (timer.pausedTime || 0)
-    }
-    return (
-      currentTime.getTime() -
-      timer.startTime.getTime() -
-      (timer.pausedTime || 0)
-    )
+    return currentTime.getTime() - timer.startTime.getTime()
   }
 
-  const isTimerActiveForCard = (cardId: string) => {
-    return activeTimer?.taskCardId === cardId
+  const isTimerActiveForTodo = (todoId: string) => {
+    return activeTimer?.todoId === todoId && activeTimer?.status === 'running'
   }
 
   const handleStartTimer = (
     areaId: string,
     areaName: string,
     areaType: 'practice' | 'project',
-    cardId: string,
-    cardTitle: string
+    taskCardId: string,
+    taskCardName: string,
+    todoId: string,
+    todoName: string
   ) => {
-    const description = timerDescriptions[cardId] || ''
-
-    if (activeTimer && activeTimer.taskCardId !== cardId) {
-      if (
-        confirm('Starting a new timer will stop the current one. Continue?')
-      ) {
-        startTimer(areaId, areaName, areaType, cardId, cardTitle, description)
-        setTimerDescriptions((prev) => ({ ...prev, [cardId]: '' }))
-
-        // Add new description to sessionDescriptions if it doesn't exist
-        if (
-          description.trim() !== '' &&
-          !sessionDescriptions.includes(description)
-        ) {
-          setSessionDescriptions((prev) => [...prev, description])
-        }
-      }
-    } else {
-      startTimer(areaId, areaName, areaType, cardId, cardTitle, description)
-      setTimerDescriptions((prev) => ({ ...prev, [cardId]: '' }))
-
-      // Add new description to sessionDescriptions if it doesn't exist
-      if (
-        description.trim() !== '' &&
-        !sessionDescriptions.includes(description)
-      ) {
-        setSessionDescriptions((prev) => [...prev, description])
-      }
-    }
+    startTimer(
+      areaId,
+      areaName,
+      areaType,
+      taskCardId,
+      taskCardName,
+      todoId,
+      todoName
+    )
   }
 
   const handleStopTimer = () => {
-    if (confirm('Stop the current timer? This will save the session.')) {
-      stopTimer()
-    }
+    stopTimer()
   }
 
   const toggleSidebar = () => {
@@ -258,23 +152,19 @@ export default function Home() {
   const handleAddTaskCard = () => {
     const currentAreaId = activePracticeAreaId || activeProjectId
     if (!currentAreaId) return
-    const title = prompt('Enter task card title:')
-    if (title) {
-      addTaskCard(
-        currentAreaId,
-        title,
-        activeAreaType as 'practice' | 'project'
-      )
+    const name = prompt('Enter task card name:')
+    if (name) {
+      addTaskCard(currentAreaId, name, activeAreaType as 'practice' | 'project')
     }
   }
 
   // Handle adding new todo
-  const handleAddTodo = (areaId: string, taskCardId: string, text: string) => {
-    if (text.trim()) {
+  const handleAddTodo = (areaId: string, taskCardId: string, name: string) => {
+    if (name.trim()) {
       addTodo(
         areaId,
         taskCardId,
-        text,
+        name,
         activeAreaType as 'practice' | 'project'
       )
     }
@@ -467,136 +357,11 @@ export default function Home() {
                     {activeArea.taskCards.map((card) => (
                       <div
                         key={card.id}
-                        className='bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm'
+                        className='bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 ease-in-out hover:border-purple-200 dark:hover:border-purple-700'
                       >
-                        {/* Timer Controls Section */}
-                        <div className='px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-750'>
-                          <div className='flex items-center justify-between'>
-                            <div className='flex items-center space-x-3'>
-                              <Clock className='w-4 h-4 text-gray-500 dark:text-gray-400' />
-
-                              {/* Timer Display */}
-                              {isTimerActiveForCard(card.id) && activeTimer ? (
-                                <div className='flex items-center space-x-3'>
-                                  <span className='text-lg font-mono font-semibold text-purple-600 dark:text-purple-400'>
-                                    {formatTime(getTimerDuration(activeTimer))}
-                                  </span>
-                                  <span className='text-xs text-gray-500 dark:text-gray-400'>
-                                    {activeTimer.status === 'running'
-                                      ? '● Recording'
-                                      : '⏸ Paused'}
-                                  </span>
-                                </div>
-                              ) : (
-                                <span className='text-sm text-gray-500 dark:text-gray-400'>
-                                  No timer active
-                                </span>
-                              )}
-                            </div>
-
-                            {/* Timer Controls */}
-                            <div className='flex items-center space-x-2'>
-                              {isTimerActiveForCard(card.id) ? (
-                                // Controls for active timer
-                                <>
-                                  {activeTimer?.status === 'running' ? (
-                                    <button
-                                      onClick={pauseTimer}
-                                      className='p-2 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg transition-colors'
-                                      title='Pause timer'
-                                    >
-                                      <Pause className='w-4 h-4' />
-                                    </button>
-                                  ) : (
-                                    <button
-                                      onClick={resumeTimer}
-                                      className='p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors'
-                                      title='Resume timer'
-                                    >
-                                      <Play className='w-4 h-4' />
-                                    </button>
-                                  )}
-                                  <button
-                                    onClick={handleStopTimer}
-                                    className='p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors'
-                                    title='Stop timer'
-                                  >
-                                    <Square className='w-4 h-4' />
-                                  </button>
-                                </>
-                              ) : (
-                                // Start timer controls
-                                <div className='flex items-center space-x-2'>
-                                  <div className='relative'>
-                                    <input
-                                      type='text'
-                                      placeholder='Description (optional)'
-                                      value={timerDescriptions[card.id] || ''}
-                                      onChange={(e) =>
-                                        handleDescriptionChange(
-                                          card.id,
-                                          e.target.value
-                                        )
-                                      }
-                                      onFocus={() =>
-                                        handleDescriptionFocus(card.id)
-                                      }
-                                      onBlur={() =>
-                                        handleDescriptionBlur(card.id)
-                                      }
-                                      className='px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent'
-                                    />
-
-                                    {/* Autocomplete Dropdown */}
-                                    {showAutocomplete[card.id] &&
-                                      filteredDescriptions[card.id]?.length >
-                                        0 && (
-                                        <div className='absolute top-full left-0 right-0 z-50 mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-40 overflow-y-auto'>
-                                          {filteredDescriptions[card.id].map(
-                                            (desc, index) => (
-                                              <div
-                                                key={index}
-                                                className='px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-900 dark:text-white'
-                                                onMouseDown={() =>
-                                                  handleDescriptionSelect(
-                                                    card.id,
-                                                    desc
-                                                  )
-                                                }
-                                              >
-                                                {desc}
-                                              </div>
-                                            )
-                                          )}
-                                        </div>
-                                      )}
-                                  </div>
-                                  <button
-                                    onClick={() =>
-                                      handleStartTimer(
-                                        activeArea.id,
-                                        activeArea.name,
-                                        activeAreaType as
-                                          | 'practice'
-                                          | 'project',
-                                        card.id,
-                                        card.title
-                                      )
-                                    }
-                                    className='p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors'
-                                    title='Start timer'
-                                  >
-                                    <Play className='w-4 h-4' />
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-
                         {/* Task Card Header */}
                         <div
-                          className='p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 transition-colors'
+                          className='p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 transition-all duration-200 ease-in-out'
                           onClick={() =>
                             toggleTaskCard(
                               activeArea.id,
@@ -609,17 +374,25 @@ export default function Home() {
                             <span
                               className={`w-3 h-3 ${getColorClass(
                                 card.color
-                              )} rounded-full`}
+                              )} rounded-full transition-transform duration-200 ${
+                                card.isExpanded ? 'scale-110' : 'scale-100'
+                              }`}
                             ></span>
-                            <h3 className='text-lg font-medium text-gray-900 dark:text-white'>
-                              {card.title}
+                            <h3 className='text-lg font-medium text-gray-900 dark:text-white transition-colors duration-200'>
+                              {card.name}
                             </h3>
                           </div>
-                          {card.isExpanded ? (
-                            <ChevronDown className='w-5 h-5 text-gray-500 dark:text-gray-400' />
-                          ) : (
-                            <ChevronRight className='w-5 h-5 text-gray-500 dark:text-gray-400' />
-                          )}
+                          <div
+                            className={`transition-transform duration-300 ease-in-out ${
+                              card.isExpanded ? 'rotate-0' : 'rotate-0'
+                            }`}
+                          >
+                            {card.isExpanded ? (
+                              <ChevronDown className='w-5 h-5 text-gray-500 dark:text-gray-400 transition-colors duration-200' />
+                            ) : (
+                              <ChevronRight className='w-5 h-5 text-gray-500 dark:text-gray-400 transition-colors duration-200' />
+                            )}
+                          </div>
                         </div>
 
                         {card.isExpanded && (
@@ -628,30 +401,118 @@ export default function Home() {
                             {card.todos.map((todo) => (
                               <div
                                 key={todo.id}
-                                className='flex items-center space-x-3'
+                                className={`flex items-center space-x-3 transition-all duration-300 ease-in-out rounded-lg p-2 -mx-2 ${
+                                  isTimerActiveForTodo(todo.id)
+                                    ? 'bg-purple-50 dark:bg-purple-900/10 ring-2 ring-purple-200 dark:ring-purple-800 shadow-sm'
+                                    : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                                }`}
                               >
                                 <input
                                   type='checkbox'
                                   checked={todo.completed}
-                                  onChange={() =>
+                                  onChange={() => {
+                                    // If this todo has an active timer and is being completed, stop the timer
+                                    if (
+                                      !todo.completed &&
+                                      isTimerActiveForTodo(todo.id)
+                                    ) {
+                                      handleStopTimer()
+                                    }
                                     toggleTodo(
                                       activeArea.id,
                                       card.id,
                                       todo.id,
                                       activeAreaType as 'practice' | 'project'
                                     )
-                                  }
+                                  }}
                                   className='w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500'
                                 />
-                                <span
-                                  className={`${
-                                    todo.completed
-                                      ? 'text-gray-500 dark:text-gray-400 line-through'
-                                      : 'text-gray-900 dark:text-white'
-                                  }`}
-                                >
-                                  {todo.text}
-                                </span>
+
+                                {/* Todo content with timer */}
+                                <div className='flex-1 flex items-center justify-between min-w-0'>
+                                  <span
+                                    className={`transition-all duration-300 truncate pr-2 ${
+                                      todo.completed
+                                        ? 'text-gray-500 dark:text-gray-400 line-through'
+                                        : 'text-gray-900 dark:text-white'
+                                    }`}
+                                  >
+                                    {todo.name}
+                                  </span>
+
+                                  {/* Timer display and controls */}
+                                  <div className='flex items-center space-x-2 sm:space-x-3 flex-shrink-0'>
+                                    {/* Timer display - show time if this todo has active timer, grayed out if completed */}
+                                    <span
+                                      className={`font-mono text-xs sm:text-sm transition-all duration-300 ${
+                                        todo.completed
+                                          ? 'text-gray-400 dark:text-gray-500'
+                                          : isTimerActiveForTodo(todo.id)
+                                          ? 'text-purple-600 dark:text-purple-400 font-semibold animate-pulse'
+                                          : 'text-gray-600 dark:text-gray-400'
+                                      }`}
+                                    >
+                                      {isTimerActiveForTodo(todo.id) &&
+                                      activeTimer
+                                        ? formatTime(
+                                            getTimerDuration(activeTimer)
+                                          )
+                                        : '00:00:00'}
+                                    </span>
+
+                                    {/* Timer control - single icon toggle, disabled if completed */}
+                                    <button
+                                      onClick={() => {
+                                        if (todo.completed) return // Don't allow timer actions on completed todos
+
+                                        if (isTimerActiveForTodo(todo.id)) {
+                                          handleStopTimer()
+                                        } else {
+                                          handleStartTimer(
+                                            activeArea.id,
+                                            activeArea.name,
+                                            activeAreaType as
+                                              | 'practice'
+                                              | 'project',
+                                            card.id,
+                                            card.name,
+                                            todo.id,
+                                            todo.name
+                                          )
+                                        }
+                                      }}
+                                      disabled={todo.completed}
+                                      className={`p-2 rounded-lg transition-all duration-200 transform touch-manipulation ${
+                                        todo.completed
+                                          ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed scale-95 opacity-50'
+                                          : isTimerActiveForTodo(todo.id)
+                                          ? 'text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer hover:scale-105 active:scale-95 shadow-sm bg-red-50/50 dark:bg-red-900/10'
+                                          : 'text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 cursor-pointer hover:scale-105 active:scale-95 shadow-sm'
+                                      }`}
+                                      title={
+                                        todo.completed
+                                          ? 'Timer disabled for completed tasks'
+                                          : isTimerActiveForTodo(todo.id)
+                                          ? 'Stop timer'
+                                          : 'Start timer'
+                                      }
+                                    >
+                                      <div
+                                        className={`transition-transform duration-200 ${
+                                          isTimerActiveForTodo(todo.id)
+                                            ? 'animate-pulse'
+                                            : ''
+                                        }`}
+                                      >
+                                        {isTimerActiveForTodo(todo.id) ? (
+                                          <Square className='w-3 h-3 sm:w-4 sm:h-4' />
+                                        ) : (
+                                          <Play className='w-4 h-4' />
+                                        )}
+                                      </div>
+                                    </button>
+                                  </div>
+                                </div>
                               </div>
                             ))}
 
@@ -733,4 +594,3 @@ export default function Home() {
     </div>
   )
 }
-
