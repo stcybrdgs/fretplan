@@ -361,7 +361,11 @@ export default function Home() {
                       >
                         {/* Task Card Header */}
                         <div
-                          className='p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 transition-all duration-200 ease-in-out'
+                          className={`p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between transition-all duration-200 ease-in-out ${
+                            card.isExpanded
+                              ? 'border-b border-gray-200 dark:border-gray-700 rounded-t-lg'
+                              : 'rounded-lg'
+                          }`}
                           onClick={() =>
                             toggleTaskCard(
                               activeArea.id,
@@ -395,7 +399,14 @@ export default function Home() {
                           </div>
                         </div>
 
-                        {card.isExpanded && (
+                        {/* Card content with smooth expand/collapse */}
+                        <div
+                          className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                            card.isExpanded
+                              ? 'max-h-screen opacity-100'
+                              : 'max-h-0 opacity-0'
+                          }`}
+                        >
                           <div className='p-4 space-y-3'>
                             {/* Todos */}
                             {card.todos.map((todo) => (
@@ -551,7 +562,7 @@ export default function Home() {
                               </button>
                             </div>
                           </div>
-                        )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -594,3 +605,4 @@ export default function Home() {
     </div>
   )
 }
+
