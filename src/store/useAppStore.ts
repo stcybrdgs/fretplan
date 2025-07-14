@@ -15,6 +15,138 @@ const generateId = () => Math.random().toString(36).substr(2, 9)
 // Helper function to get today's date string
 const getTodayDateString = () => new Date().toISOString().split('T')[0]
 
+// Helper function to get milliseconds elapsed since midnight
+const getMillisecondsSinceMidnight = (date: Date): number => {
+  const hours = date.getHours()
+  const minutes = date.getMinutes()
+  const seconds = date.getSeconds()
+  const milliseconds = date.getMilliseconds()
+
+  return (hours * 3600 + minutes * 60 + seconds) * 1000 + milliseconds
+}
+
+// Helper function to check if session crossed midnight and split if needed
+const handlePotentialMidnightCrossing = (
+  state: AppState,
+  timer: ActiveTimer,
+  endTime: Date
+): AppState => {
+  const startTime = new Date(timer.startTime)
+  const totalDurationMs = endTime.getTime() - startTime.getTime()
+  const elapsedSinceMidnightMs = getMillisecondsSinceMidnight(endTime)
+
+  console.log('🕐 Checking for midnight crossing:', {
+    startTime: startTime.toLocaleString(),
+    endTime: endTime.toLocaleString(),
+    totalDurationMs,
+    totalDurationMinutes: Math.round(totalDurationMs / 60000),
+    elapsedSinceMidnightMs,
+    elapsedSinceMidnightMinutes: Math.round(elapsedSinceMidnightMs / 60000),
+    startDay: startTime.toISOString().split('T')[0],
+    endDay: endTime.toISOString().split('T')[0],
+  })
+
+  // Check if we're on different days AND if timer duration exceeds elapsed time since midnight
+  const startDay =
+    startTime.getFullYear() +
+    '-' +
+    String(startTime.getMonth() + 1).padStart(2, '0') +
+    '-' +
+    String(startTime.getDate()).padStart(2, '0')
+  const endDay =
+    endTime.getFullYear() +
+    '-' +
+    String(endTime.getMonth() + 1).padStart(2, '0') +
+    '-' +
+    String(endTime.getDate()).padStart(2, '0')
+  const crossedDayBoundary = startDay !== endDay
+
+  if (crossedDayBoundary && totalDurationMs > elapsedSinceMidnightMs) {
+    console.log('🌙 MIDNIGHT CROSSING DETECTED!')
+
+    // Calculate split durations
+    const afterMidnightMs = elapsedSinceMidnightMs
+    const beforeMidnightMs = totalDurationMs - elapsedSinceMidnightMs
+
+    console.log('⏱️ Split calculation:', {
+      beforeMidnightMs,
+      beforeMidnightMinutes: Math.round(beforeMidnightMs / 60000),
+      afterMidnightMs,
+      afterMidnightMinutes: Math.round(afterMidnightMs / 60000),
+      verification: `${Math.round(beforeMidnightMs / 60000)} + ${Math.round(
+        afterMidnightMs / 60000
+      )} = ${Math.round(
+        (beforeMidnightMs + afterMidnightMs) / 60000
+      )} (should equal ${Math.round(totalDurationMs / 60000)})`,
+    })
+
+    // Validate split makes sense
+    if (beforeMidnightMs <= 0 || afterMidnightMs <= 0) {
+      console.error('❌ Invalid split durations, using normal handling')
+      return addToTodaysTotal(state, timer.todoId, totalDurationMs, {
+        areaId: timer.areaId,
+        areaName: timer.areaName,
+        areaType: timer.areaType,
+        taskCardId: timer.taskCardId,
+        taskCardName: timer.taskCardName,
+        todoName: timer.todoName,
+      })
+    }
+
+    // Add time to first day (before midnight)
+    console.log(
+      `💾 Adding ${Math.round(beforeMidnightMs / 60000)} minutes to ${startDay}`
+    )
+    let newState = addToTodaysTotal(
+      state,
+      timer.todoId,
+      beforeMidnightMs,
+      {
+        areaId: timer.areaId,
+        areaName: timer.areaName,
+        areaType: timer.areaType,
+        taskCardId: timer.taskCardId,
+        taskCardName: timer.taskCardName,
+        todoName: timer.todoName,
+      },
+      startDay
+    )
+
+    // Add time to second day (after midnight)
+    console.log(
+      `💾 Adding ${Math.round(afterMidnightMs / 60000)} minutes to ${endDay}`
+    )
+    newState = addToTodaysTotal(
+      newState,
+      timer.todoId,
+      afterMidnightMs,
+      {
+        areaId: timer.areaId,
+        areaName: timer.areaName,
+        areaType: timer.areaType,
+        taskCardId: timer.taskCardId,
+        taskCardName: timer.taskCardName,
+        todoName: timer.todoName,
+      },
+      endDay
+    )
+
+    console.log('✅ Midnight crossing handled successfully')
+    return newState
+  } else {
+    console.log('📝 Normal session - no midnight crossing')
+    // Normal single-day session
+    return addToTodaysTotal(state, timer.todoId, totalDurationMs, {
+      areaId: timer.areaId,
+      areaName: timer.areaName,
+      areaType: timer.areaType,
+      taskCardId: timer.taskCardId,
+      taskCardName: timer.taskCardName,
+      todoName: timer.todoName,
+    })
+  }
+}
+
 // Helper function to add duration to today's total for a todo
 const addToTodaysTotal = (
   state: AppState,
@@ -27,12 +159,13 @@ const addToTodaysTotal = (
     taskCardId: string
     taskCardName: string
     todoName: string
-  }
+  },
+  targetDate?: string // Optional: specify which date to add to
 ) => {
-  const today = getTodayDateString()
-  const todaysTimers = state.timers[today] || []
+  const dateToUse = targetDate || getTodayDateString()
+  const todaysTimers = state.timers[dateToUse] || []
 
-  // Find existing timer record for this todo today
+  // Find existing timer record for this todo on target date
   const existingTimerIndex = todaysTimers.findIndex(
     (timer: TimerDayRecord) => timer.todoId === todoId
   )
@@ -49,11 +182,11 @@ const addToTodaysTotal = (
       ...state,
       timers: {
         ...state.timers,
-        [today]: updatedTimers,
+        [dateToUse]: updatedTimers,
       },
     }
   } else {
-    // Create new record for this todo today
+    // Create new record for this todo on target date
     const newTimerRecord = {
       id: generateId(),
       createdAt: new Date(),
@@ -71,7 +204,7 @@ const addToTodaysTotal = (
       ...state,
       timers: {
         ...state.timers,
-        [today]: [...todaysTimers, newTimerRecord],
+        [dateToUse]: [...todaysTimers, newTimerRecord],
       },
     }
   }
@@ -171,7 +304,6 @@ export const useAppStore = create<AppState>()(
         // Timer state
         activeTimer: null,
         timers: {}, // Daily timer records organized by date
-        midnightFlag: 0 as 0 | 1, // Toggles between 0 and 1 at midnight
 
         // Navigation actions
         setActivePracticeArea: (id: string) =>
@@ -224,34 +356,15 @@ export const useAppStore = create<AppState>()(
             // If there's already an active timer, auto-stop it first
             if (state.activeTimer && state.activeTimer.status === 'running') {
               const now = new Date()
-              const duration =
-                now.getTime() - state.activeTimer.startTime.getTime()
-
-              // Check if midnight occurred during this session
-              if (state.activeTimer.midnightSnapshot !== state.midnightFlag) {
-                // Handle cross-midnight session (TODO: implement splitSessionAcrossMidnight)
-                console.log(
-                  'Cross-midnight session detected - will implement splitting logic'
-                )
-              } else {
-                // Normal single-day session - add to today's total
-                state = addToTodaysTotal(
-                  state,
-                  state.activeTimer.todoId,
-                  duration,
-                  {
-                    areaId: state.activeTimer.areaId,
-                    areaName: state.activeTimer.areaName,
-                    areaType: state.activeTimer.areaType,
-                    taskCardId: state.activeTimer.taskCardId,
-                    taskCardName: state.activeTimer.taskCardName,
-                    todoName: state.activeTimer.todoName,
-                  }
-                )
-              }
+              // Use the new midnight crossing detection
+              state = handlePotentialMidnightCrossing(
+                state,
+                state.activeTimer,
+                now
+              )
             }
 
-            // Create new active timer with midnight snapshot
+            // Create new active timer (much simpler - no midnight snapshot needed!)
             const newActiveTimer: ActiveTimer = {
               id: generateId(),
               areaId,
@@ -263,7 +376,6 @@ export const useAppStore = create<AppState>()(
               todoName,
               startTime: new Date(),
               status: 'running',
-              midnightSnapshot: state.midnightFlag, // Capture current midnight flag
             }
 
             return {
@@ -274,46 +386,21 @@ export const useAppStore = create<AppState>()(
 
         stopTimer: () =>
           set((state) => {
-            if (!state.activeTimer) {
-              return state
-            }
+            if (!state.activeTimer) return state
 
             const now = new Date()
-            const duration =
-              now.getTime() - state.activeTimer.startTime.getTime()
+            // Use the new midnight crossing detection
+            state = handlePotentialMidnightCrossing(
+              state,
+              state.activeTimer,
+              now
+            )
 
-            // Check if midnight occurred during this session
-            if (state.activeTimer.midnightSnapshot !== state.midnightFlag) {
-              // Handle cross-midnight session (TODO: implement splitSessionAcrossMidnight)
-              console.log(
-                'Cross-midnight session detected - will implement splitting logic'
-              )
-            } else {
-              // Normal single-day session - add to today's total
-              state = addToTodaysTotal(
-                state,
-                state.activeTimer.todoId,
-                duration,
-                {
-                  areaId: state.activeTimer.areaId,
-                  areaName: state.activeTimer.areaName,
-                  areaType: state.activeTimer.areaType,
-                  taskCardId: state.activeTimer.taskCardId,
-                  taskCardName: state.activeTimer.taskCardName,
-                  todoName: state.activeTimer.todoName,
-                }
-              )
-            }
             return {
               ...state,
               activeTimer: null,
             }
           }),
-
-        handleMidnightTransition: () =>
-          set((state) => ({
-            midnightFlag: state.midnightFlag === 0 ? 1 : 0, // Toggle between 0 and 1
-          })),
 
         // CRUD operations
         addPracticeArea: (name: string, color: PracticeArea['color']) =>
@@ -464,7 +551,6 @@ export const useAppStore = create<AppState>()(
       } as AppState),
     {
       name: 'fretplan-storage', // localStorage key
-      // select
       partialize: (state) => ({
         practiceAreas: state.practiceAreas,
         projects: state.projects,
@@ -472,7 +558,6 @@ export const useAppStore = create<AppState>()(
         activeProjectId: state.activeProjectId,
         isDarkMode: state.isDarkMode,
         timers: state.timers,
-        midnightFlag: state.midnightFlag,
         // Note: activeTimer is not persisted - timers don't survive page refresh
         // TODO: Fix hydration flicker - theme resets to light on page refresh
         // Plan: Integrate next-themes library or implement blocking script in <head>

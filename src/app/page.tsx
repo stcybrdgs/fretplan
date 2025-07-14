@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { useAppStore } from '@/store/useAppStore'
 import { PracticeArea, ProjectArea, TaskCard, Todo } from '@/types'
+import DigitalClock from '@/app/components/DigitalClock'
 
 export default function Home() {
   // Zustand store
@@ -52,19 +53,6 @@ export default function Home() {
 
     return () => clearInterval(interval)
   }, [])
-
-  // Midnight detection - check every minute for date change
-  useEffect(() => {
-    const midnightInterval = setInterval(() => {
-      const now = new Date()
-      if (now.getHours() === 0 && now.getMinutes() === 0) {
-        console.log('Midnight detected! Toggling midnight flag...')
-        handleMidnightTransition()
-      }
-    }, 60000) // Check every minute
-
-    return () => clearInterval(midnightInterval)
-  }, [handleMidnightTransition])
 
   // Apply theme on component mount (for initial load)
   useEffect(() => {
@@ -221,6 +209,7 @@ export default function Home() {
             <h1 className='text-xl font-semibold text-primary-custom'>
               FretPlan
             </h1>
+            <DigitalClock className='hidden md:block text-gray-600 dark:text-gray-400' />
           </div>
 
           {/* Right side controls */}
