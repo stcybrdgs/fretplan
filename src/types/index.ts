@@ -11,7 +11,7 @@ export type { ProjectArea } from './project'
 export type { ViewType, AreaType } from './ui'
 
 // Color picker types
-export type { ColorPickerState } from './colorPicker'
+export type { ColorPickerState, ColorPickerProps } from './colorPicker'
 
 // Timer types
 export type {
