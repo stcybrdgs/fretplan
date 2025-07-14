@@ -21,6 +21,7 @@ import {
   ColorPickerState,
 } from '@/types'
 import ColorPicker from '@/app/components/ColorPicker'
+import ScrollableText from '@/app/components/ScrollableText'
 // import DigitalClock from '@/app/components/DigitalClock' // test-only clock component
 
 export default function Home() {
@@ -356,9 +357,11 @@ export default function Home() {
                 <span
                   className={`w-2 h-2 ${getColorClass(
                     area.color
-                  )} rounded-full`}
+                  )} rounded-full flex-shrink-0`}
                 ></span>
-                <span>{area.name}</span>
+                <ScrollableText className='flex-1'>
+                  <span>{area.name}</span>
+                </ScrollableText>
               </button>
             ))}
 
@@ -391,9 +394,11 @@ export default function Home() {
                   <span
                     className={`w-2 h-2 ${getColorClass(
                       project.color
-                    )} rounded-full`}
+                    )} rounded-full flex-shrink-0`}
                   ></span>
-                  <span>{project.name}</span>
+                  <ScrollableText className='flex-1'>
+                    <span>{project.name}</span>
+                  </ScrollableText>
                 </button>
               ))}
             </div>
@@ -497,9 +502,11 @@ export default function Home() {
                                 card.isExpanded ? 'scale-110' : 'scale-100'
                               }`}
                             ></span>
-                            <h3 className='text-lg font-medium text-gray-900 dark:text-white transition-colors duration-200'>
-                              {card.name}
-                            </h3>
+                            <ScrollableText>
+                              <h3 className='text-lg font-medium text-gray-900 dark:text-white transition-colors duration-200'>
+                                {card.name}
+                              </h3>
+                            </ScrollableText>
                           </div>
                           <div
                             className={`transition-transform duration-300 ease-in-out ${
@@ -561,15 +568,17 @@ export default function Home() {
 
                                   {/* Todo content with timer */}
                                   <div className='flex-1 flex items-center justify-between min-w-0'>
-                                    <span
-                                      className={`transition-all duration-300 truncate pr-2 ${
-                                        todo.completed
-                                          ? 'text-gray-500 dark:text-gray-400 line-through'
-                                          : 'text-gray-900 dark:text-white'
-                                      }`}
-                                    >
-                                      {todo.name}
-                                    </span>
+                                    <ScrollableText className='flex-shrink-0 cursor-pointer'>
+                                      <span
+                                        className={`transition-all duration-300 ${
+                                          todo.completed
+                                            ? 'text-gray-500 dark:text-gray-400 line-through'
+                                            : 'text-gray-900 dark:text-white'
+                                        }`}
+                                      >
+                                        {todo.name}
+                                      </span>
+                                    </ScrollableText>
 
                                     {/* Timer display and controls */}
                                     <div className='flex items-center space-x-2 sm:space-x-3 flex-shrink-0'>

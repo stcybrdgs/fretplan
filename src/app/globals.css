@@ -15,5 +15,23 @@
   .text-primary-custom {
     color: #9333ea;
   }
-}
 
+  /* Custom scrollbar styling for text containers */
+  .overflow-x-auto::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .overflow-x-auto::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .overflow-x-auto::-webkit-scrollbar-thumb {
+    background: #9ca3af;
+    border-radius: 2px;
+  }
+
+  /* No hover states - keep scrollbar consistent */
+  .dark .overflow-x-auto::-webkit-scrollbar-thumb {
+    background: #6b7280;
+  }
+}
