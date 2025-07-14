@@ -206,7 +206,7 @@ export default function Home() {
               <Menu className='w-4 h-4' />
             </button>
             <h1 className='text-xl font-semibold text-primary-custom'>
-              FretPlan
+              FretTime
             </h1>
             {/* test-only clock component */}
             {/* <DigitalClock className='hidden md:block text-gray-600 dark:text-gray-400' /> */}

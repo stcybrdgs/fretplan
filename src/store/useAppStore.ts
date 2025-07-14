@@ -550,7 +550,7 @@ export const useAppStore = create<AppState>()(
           }),
       } as AppState),
     {
-      name: 'fretplan-storage', // localStorage key
+      name: 'frettime-storage', // localStorage key
       partialize: (state) => ({
         practiceAreas: state.practiceAreas,
         projects: state.projects,
