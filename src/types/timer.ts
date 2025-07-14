@@ -12,7 +12,6 @@ export interface ActiveTimer {
   todoName: string
   startTime: Date
   status: TimerStatus
-  midnightSnapshot: number // Capture midnightFlag when timer starts
 }
 
 // Daily timer record - one per todo per day with accumulated time
@@ -57,3 +56,4 @@ export interface TimerState {
   getTimersForDate: (date: string) => TimerDayRecord[]
   handleMidnightTransition: () => void
 }
+
