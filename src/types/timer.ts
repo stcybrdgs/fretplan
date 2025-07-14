@@ -35,9 +35,6 @@ export interface TimerState {
   // Daily timer records organized by date
   timers: { [date: string]: TimerDayRecord[] }
 
-  // Midnight detection flag (toggles between 0 and 1)
-  midnightFlag: 0 | 1
-
   // Timer actions
   startTimer: (
     areaId: string,
