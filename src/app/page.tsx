@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 import { useAppStore } from '@/store/useAppStore'
 import { PracticeArea, ProjectArea, TaskCard, Todo } from '@/types'
-import DigitalClock from '@/app/components/DigitalClock'
+// import DigitalClock from '@/app/components/DigitalClock' // test-only clock component
 
 export default function Home() {
   // Zustand store
@@ -209,7 +209,8 @@ export default function Home() {
             <h1 className='text-xl font-semibold text-primary-custom'>
               FretPlan
             </h1>
-            <DigitalClock className='hidden md:block text-gray-600 dark:text-gray-400' />
+            {/* test-only clock component */}
+            {/* <DigitalClock className='hidden md:block text-gray-600 dark:text-gray-400' /> */}
           </div>
 
           {/* Right side controls */}
