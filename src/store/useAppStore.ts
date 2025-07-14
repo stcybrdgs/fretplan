@@ -4,6 +4,7 @@ import {
   AppState,
   PracticeArea,
   ProjectArea,
+  TaskCard
   AreaType,
   ActiveTimer,
   TimerDayRecord,
