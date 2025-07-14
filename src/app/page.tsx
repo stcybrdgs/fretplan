@@ -41,7 +41,6 @@ export default function Home() {
     toggleTaskCard,
     startTimer,
     stopTimer,
-    handleMidnightTransition,
   } = useAppStore()
 
   // Force re-render every second for timer display updates
