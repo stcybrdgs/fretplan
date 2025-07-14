@@ -13,19 +13,15 @@ import {
   Square,
 } from 'lucide-react'
 import { useAppStore } from '@/store/useAppStore'
-import { PracticeArea, ProjectArea, TaskCard, Todo } from '@/types'
+import {
+  PracticeArea,
+  ProjectArea,
+  TaskCard,
+  Todo,
+  ColorPickerState,
+} from '@/types'
 import ColorPicker from '@/app/components/ColorPicker'
 // import DigitalClock from '@/app/components/DigitalClock' // test-only clock component
-
-interface ColorPickerState {
-  isOpen: boolean
-  position: { x: number; y: number }
-  targetId: string
-  targetType: 'practice-area' | 'project' | 'task-card'
-  currentColor: string
-  areaId?: string // For task cards, we need to know which area they belong to
-  areaType?: 'practice' | 'project' // For task cards
-}
 
 export default function Home() {
   // Zustand store

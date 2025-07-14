@@ -1,12 +1,5 @@
 import React, { useEffect, useRef } from 'react'
-
-interface ColorPickerProps {
-  isOpen: boolean
-  position: { x: number; y: number }
-  currentColor: string
-  onColorSelect: (color: string) => void
-  onClose: () => void
-}
+import { ColorPickerProps } from '@/types'
 
 const ColorPicker: React.FC<ColorPickerProps> = ({
   isOpen,
@@ -108,4 +101,3 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
 }
 
 export default ColorPicker
-
