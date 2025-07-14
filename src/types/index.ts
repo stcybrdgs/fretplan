@@ -10,6 +10,9 @@ export type { ProjectArea } from './project'
 // UI types
 export type { ViewType, AreaType } from './ui'
 
+// Color picker types
+export type { ColorPickerState } from './colorPicker'
+
 // Timer types
 export type {
   TimerStatus,

@@ -14,7 +14,18 @@ import {
 } from 'lucide-react'
 import { useAppStore } from '@/store/useAppStore'
 import { PracticeArea, ProjectArea, TaskCard, Todo } from '@/types'
+import ColorPicker from '@/app/components/ColorPicker'
 // import DigitalClock from '@/app/components/DigitalClock' // test-only clock component
+
+interface ColorPickerState {
+  isOpen: boolean
+  position: { x: number; y: number }
+  targetId: string
+  targetType: 'practice-area' | 'project' | 'task-card'
+  currentColor: string
+  areaId?: string // For task cards, we need to know which area they belong to
+  areaType?: 'practice' | 'project' // For task cards
+}
 
 export default function Home() {
   // Zustand store
@@ -41,6 +52,9 @@ export default function Home() {
     toggleTaskCard,
     startTimer,
     stopTimer,
+    updatePracticeAreaColor,
+    updateProjectColor,
+    updateTaskCardColor,
   } = useAppStore()
 
   // Force re-render every second for timer display updates
@@ -53,6 +67,15 @@ export default function Home() {
     return () => clearInterval(interval)
   }, [])
 
+  // Color picker state
+  const [colorPickerState, setColorPickerState] = useState<ColorPickerState>({
+    isOpen: false,
+    position: { x: 0, y: 0 },
+    targetId: '',
+    targetType: 'practice-area',
+    currentColor: 'gray',
+  })
+
   // Apply theme on component mount (for initial load)
   useEffect(() => {
     if (isDarkMode) {
@@ -61,6 +84,62 @@ export default function Home() {
       document.documentElement.classList.remove('dark')
     }
   }, [isDarkMode])
+
+  // Color picker handlers
+  const openColorPicker = (
+    e: React.MouseEvent,
+    targetId: string,
+    targetType: ColorPickerState['targetType'],
+    currentColor: string,
+    areaId?: string,
+    areaType?: 'practice' | 'project'
+  ) => {
+    e.preventDefault() // Prevent browser context menu
+    setColorPickerState({
+      isOpen: true,
+      position: { x: e.clientX, y: e.clientY },
+      targetId,
+      targetType,
+      currentColor,
+      areaId,
+      areaType,
+    })
+  }
+
+  const closeColorPicker = () => {
+    setColorPickerState((prev) => ({ ...prev, isOpen: false }))
+  }
+
+  const handleColorSelect = (newColor: string) => {
+    const { targetId, targetType, areaId, areaType } = colorPickerState
+
+    switch (targetType) {
+      case 'practice-area':
+        updatePracticeAreaColor(targetId, newColor as PracticeArea['color'])
+        break
+      case 'project':
+        updateProjectColor(targetId, newColor as ProjectArea['color'])
+        break
+      case 'task-card':
+        if (areaId && areaType) {
+          updateTaskCardColor(
+            areaId,
+            targetId,
+            newColor as TaskCard['color'],
+            areaType
+          )
+        }
+        break
+    }
+
+    console.log('Color selected:', {
+      targetId,
+      targetType,
+      newColor,
+      areaId,
+      areaType,
+    })
+  }
 
   // Timer helper functions
   const formatTime = (milliseconds: number) => {
@@ -145,11 +224,16 @@ export default function Home() {
   // Get color class for practice area dots
   const getColorClass = (color: string) => {
     const colorMap = {
-      purple: 'bg-purple-600',
-      green: 'bg-green-600',
-      orange: 'bg-orange-600',
-      blue: 'bg-blue-600',
       red: 'bg-red-600',
+      orange: 'bg-orange-600',
+      yellow: 'bg-yellow-500',
+      green: 'bg-green-600',
+      teal: 'bg-teal-600',
+      blue: 'bg-blue-600',
+      indigo: 'bg-indigo-600',
+      purple: 'bg-purple-600',
+      pink: 'bg-pink-600',
+      gray: 'bg-gray-600',
     }
     return colorMap[color as keyof typeof colorMap] || 'bg-purple-600'
   }
@@ -158,7 +242,7 @@ export default function Home() {
   const handleAddPracticeArea = () => {
     const name = prompt('Enter practice area name:')
     if (name) {
-      addPracticeArea(name, 'purple')
+      addPracticeArea(name, 'gray')
     }
   }
 
@@ -166,7 +250,7 @@ export default function Home() {
   const handleAddProject = () => {
     const name = prompt('Enter project name:')
     if (name) {
-      addProject(name, 'purple')
+      addProject(name, 'gray')
     }
   }
 
@@ -264,6 +348,9 @@ export default function Home() {
               <button
                 key={area.id}
                 onClick={() => setActivePracticeArea(area.id)}
+                onContextMenu={(e) =>
+                  openColorPicker(e, area.id, 'practice-area', area.color)
+                }
                 className={`flex items-center space-x-3 w-full text-left p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
                   activePracticeAreaId === area.id
                     ? 'bg-purple-50 dark:bg-purple-900/20 text-gray-900 dark:text-white'
@@ -296,6 +383,9 @@ export default function Home() {
                 <button
                   key={project.id}
                   onClick={() => setActiveProject(project.id)}
+                  onContextMenu={(e) =>
+                    openColorPicker(e, project.id, 'project', project.color)
+                  }
                   className={`flex items-center space-x-3 w-full text-left p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
                     activeProjectId === project.id
                       ? 'bg-purple-50 dark:bg-purple-900/20 text-gray-900 dark:text-white'
@@ -354,11 +444,6 @@ export default function Home() {
                     <h2 className='text-2xl font-bold text-gray-900 dark:text-white mb-2'>
                       {activeArea.name}
                     </h2>
-                    <p className='text-gray-600 dark:text-gray-400'>
-                      {activeView === 'practice-area'
-                        ? 'Plan your practice, track your progress'
-                        : 'Organize your creative projects'}
-                    </p>
                   </div>
 
                   {/* Add New Card Button */}
@@ -383,7 +468,7 @@ export default function Home() {
                         key={card.id}
                         className='bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 ease-in-out hover:border-purple-200 dark:hover:border-purple-700'
                       >
-                        {/* Task Card Header */}
+                        {/* Task Card Header with right-click */}
                         <div
                           className={`p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between transition-all duration-200 ease-in-out ${
                             card.isExpanded
@@ -394,6 +479,16 @@ export default function Home() {
                             toggleTaskCard(
                               activeArea.id,
                               card.id,
+                              activeAreaType as 'practice' | 'project'
+                            )
+                          }
+                          onContextMenu={(e) =>
+                            openColorPicker(
+                              e,
+                              card.id,
+                              'task-card',
+                              card.color,
+                              activeArea.id,
                               activeAreaType as 'practice' | 'project'
                             )
                           }
@@ -433,120 +528,126 @@ export default function Home() {
                         >
                           <div className='p-4 space-y-3'>
                             {/* Todos */}
-                            {card.todos.map((todo: Todo) => (
-                              <div
-                                key={todo.id}
-                                className={`flex items-center space-x-3 transition-all duration-300 ease-in-out rounded-lg p-2 -mx-2 ${
-                                  isTimerActiveForTodo(todo.id)
-                                    ? 'bg-purple-50 dark:bg-purple-900/10 ring-2 ring-purple-200 dark:ring-purple-800 shadow-sm'
-                                    : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                                }`}
-                              >
-                                <input
-                                  type='checkbox'
-                                  checked={todo.completed}
-                                  onChange={() => {
-                                    // If this todo has an active timer and is being completed, stop the timer
-                                    if (
-                                      !todo.completed &&
-                                      isTimerActiveForTodo(todo.id)
-                                    ) {
-                                      handleStopTimer()
-                                    }
-                                    toggleTodo(
-                                      activeArea.id,
-                                      card.id,
-                                      todo.id,
-                                      activeAreaType as 'practice' | 'project'
-                                    )
-                                  }}
-                                  className='w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500'
-                                />
+                            {card.todos.length === 0 ? (
+                              <div className='text-gray-500 dark:text-gray-400 italic text-sm py-2'>
+                                No tasks yet...
+                              </div>
+                            ) : (
+                              card.todos.map((todo: Todo) => (
+                                <div
+                                  key={todo.id}
+                                  className={`flex items-center space-x-3 transition-all duration-300 ease-in-out rounded-lg p-2 -mx-2 ${
+                                    isTimerActiveForTodo(todo.id)
+                                      ? 'bg-purple-50 dark:bg-purple-900/10 ring-2 ring-purple-200 dark:ring-purple-800 shadow-sm'
+                                      : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                                  }`}
+                                >
+                                  <input
+                                    type='checkbox'
+                                    checked={todo.completed}
+                                    onChange={() => {
+                                      // If this todo has an active timer and is being completed, stop the timer
+                                      if (
+                                        !todo.completed &&
+                                        isTimerActiveForTodo(todo.id)
+                                      ) {
+                                        handleStopTimer()
+                                      }
+                                      toggleTodo(
+                                        activeArea.id,
+                                        card.id,
+                                        todo.id,
+                                        activeAreaType as 'practice' | 'project'
+                                      )
+                                    }}
+                                    className='w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500'
+                                  />
 
-                                {/* Todo content with timer */}
-                                <div className='flex-1 flex items-center justify-between min-w-0'>
-                                  <span
-                                    className={`transition-all duration-300 truncate pr-2 ${
-                                      todo.completed
-                                        ? 'text-gray-500 dark:text-gray-400 line-through'
-                                        : 'text-gray-900 dark:text-white'
-                                    }`}
-                                  >
-                                    {todo.name}
-                                  </span>
-
-                                  {/* Timer display and controls */}
-                                  <div className='flex items-center space-x-2 sm:space-x-3 flex-shrink-0'>
-                                    {/* Timer display - show time if this todo has active timer, grayed out if completed */}
+                                  {/* Todo content with timer */}
+                                  <div className='flex-1 flex items-center justify-between min-w-0'>
                                     <span
-                                      className={`font-mono text-xs sm:text-sm transition-all duration-300 ${
+                                      className={`transition-all duration-300 truncate pr-2 ${
                                         todo.completed
-                                          ? 'text-gray-400 dark:text-gray-500'
-                                          : isTimerActiveForTodo(todo.id)
-                                          ? 'text-purple-600 dark:text-purple-400 font-semibold animate-pulse'
-                                          : 'text-gray-600 dark:text-gray-400'
+                                          ? 'text-gray-500 dark:text-gray-400 line-through'
+                                          : 'text-gray-900 dark:text-white'
                                       }`}
                                     >
-                                      {formatTime(
-                                        getDisplayTimeForTodo(todo.id)
-                                      )}
+                                      {todo.name}
                                     </span>
 
-                                    {/* Timer control - single icon toggle, disabled if completed */}
-                                    <button
-                                      onClick={() => {
-                                        if (todo.completed) return // Don't allow timer actions on completed todos
-
-                                        if (isTimerActiveForTodo(todo.id)) {
-                                          handleStopTimer()
-                                        } else {
-                                          handleStartTimer(
-                                            activeArea.id,
-                                            activeArea.name,
-                                            activeAreaType as
-                                              | 'practice'
-                                              | 'project',
-                                            card.id,
-                                            card.name,
-                                            todo.id,
-                                            todo.name
-                                          )
-                                        }
-                                      }}
-                                      disabled={todo.completed}
-                                      className={`p-2 rounded-lg transition-all duration-200 transform touch-manipulation ${
-                                        todo.completed
-                                          ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed scale-95 opacity-50'
-                                          : isTimerActiveForTodo(todo.id)
-                                          ? 'text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer hover:scale-105 active:scale-95 shadow-sm bg-red-50/50 dark:bg-red-900/10'
-                                          : 'text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 cursor-pointer hover:scale-105 active:scale-95 shadow-sm'
-                                      }`}
-                                      title={
-                                        todo.completed
-                                          ? 'Timer disabled for completed tasks'
-                                          : isTimerActiveForTodo(todo.id)
-                                          ? 'Stop timer'
-                                          : 'Start timer'
-                                      }
-                                    >
-                                      <div
-                                        className={`transition-transform duration-200 ${
-                                          isTimerActiveForTodo(todo.id)
-                                            ? 'animate-pulse'
-                                            : ''
+                                    {/* Timer display and controls */}
+                                    <div className='flex items-center space-x-2 sm:space-x-3 flex-shrink-0'>
+                                      {/* Timer display - show time if this todo has active timer, grayed out if completed */}
+                                      <span
+                                        className={`font-mono text-xs sm:text-sm transition-all duration-300 ${
+                                          todo.completed
+                                            ? 'text-gray-400 dark:text-gray-500'
+                                            : isTimerActiveForTodo(todo.id)
+                                            ? 'text-purple-600 dark:text-purple-400 font-semibold animate-pulse'
+                                            : 'text-gray-600 dark:text-gray-400'
                                         }`}
                                       >
-                                        {isTimerActiveForTodo(todo.id) ? (
-                                          <Square className='w-3 h-3 sm:w-4 sm:h-4' />
-                                        ) : (
-                                          <Play className='w-4 h-4' />
+                                        {formatTime(
+                                          getDisplayTimeForTodo(todo.id)
                                         )}
-                                      </div>
-                                    </button>
+                                      </span>
+
+                                      {/* Timer control - single icon toggle, disabled if completed */}
+                                      <button
+                                        onClick={() => {
+                                          if (todo.completed) return // Don't allow timer actions on completed todos
+
+                                          if (isTimerActiveForTodo(todo.id)) {
+                                            handleStopTimer()
+                                          } else {
+                                            handleStartTimer(
+                                              activeArea.id,
+                                              activeArea.name,
+                                              activeAreaType as
+                                                | 'practice'
+                                                | 'project',
+                                              card.id,
+                                              card.name,
+                                              todo.id,
+                                              todo.name
+                                            )
+                                          }
+                                        }}
+                                        disabled={todo.completed}
+                                        className={`p-2 rounded-lg transition-all duration-200 transform touch-manipulation ${
+                                          todo.completed
+                                            ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed scale-95 opacity-50'
+                                            : isTimerActiveForTodo(todo.id)
+                                            ? 'text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer hover:scale-105 active:scale-95 shadow-sm bg-red-50/50 dark:bg-red-900/10'
+                                            : 'text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 cursor-pointer hover:scale-105 active:scale-95 shadow-sm'
+                                        }`}
+                                        title={
+                                          todo.completed
+                                            ? 'Timer disabled for completed tasks'
+                                            : isTimerActiveForTodo(todo.id)
+                                            ? 'Stop timer'
+                                            : 'Start timer'
+                                        }
+                                      >
+                                        <div
+                                          className={`transition-transform duration-200 ${
+                                            isTimerActiveForTodo(todo.id)
+                                              ? 'animate-pulse'
+                                              : ''
+                                          }`}
+                                        >
+                                          {isTimerActiveForTodo(todo.id) ? (
+                                            <Square className='w-3 h-3 sm:w-4 sm:h-4' />
+                                          ) : (
+                                            <Play className='w-4 h-4' />
+                                          )}
+                                        </div>
+                                      </button>
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            ))}
+                              ))
+                            )}
 
                             {/* Add new todo */}
                             <div className='flex items-center space-x-2 mt-4 pt-3 border-t border-gray-200 dark:border-gray-700'>
@@ -623,6 +724,15 @@ export default function Home() {
           onClick={toggleSidebar}
         ></div>
       )}
+
+      {/* Color Picker */}
+      <ColorPicker
+        isOpen={colorPickerState.isOpen}
+        position={colorPickerState.position}
+        currentColor={colorPickerState.currentColor}
+        onColorSelect={handleColorSelect}
+        onClose={closeColorPicker}
+      />
     </div>
   )
 }

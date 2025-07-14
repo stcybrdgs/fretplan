@@ -1,5 +1,5 @@
 // Store state and actions interface
-import { PracticeArea } from './practice'
+import { PracticeArea, TaskCard } from './practice'
 import { ProjectArea } from './project'
 import { ViewType, AreaType } from './ui'
 import { TimerDayRecord, ActiveTimer } from './timer' // Import timer types
@@ -22,7 +22,22 @@ export interface AppState {
   // Timer state (from TimerState interface)
   activeTimer: ActiveTimer | null
   timers: { [date: string]: TimerDayRecord[] }
-  midnightFlag: 0 | 1
+
+  // Color update actions
+  updatePracticeAreaColor: (
+    areaId: string,
+    newColor: PracticeArea['color']
+  ) => void
+  updateProjectColor: (
+    projectId: string,
+    newColor: ProjectArea['color']
+  ) => void
+  updateTaskCardColor: (
+    areaId: string,
+    taskCardId: string,
+    newColor: TaskCard['color'],
+    areaType: AreaType
+  ) => void
 
   // Navigation actions
   setActivePracticeArea: (id: string) => void

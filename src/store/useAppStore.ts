@@ -324,6 +324,54 @@ export const useAppStore = create<AppState>()(
 
         setSidebarOpen: (isOpen: boolean) => set({ isSidebarOpen: isOpen }),
 
+        // Color update actions
+        updatePracticeAreaColor: (
+          areaId: string,
+          newColor: PracticeArea['color']
+        ) =>
+          set((state) => ({
+            practiceAreas: state.practiceAreas.map((area) =>
+              area.id === areaId ? { ...area, color: newColor } : area
+            ),
+          })),
+
+        updateProjectColor: (
+          projectId: string,
+          newColor: ProjectArea['color']
+        ) =>
+          set((state) => ({
+            projects: state.projects.map((project) =>
+              project.id === projectId
+                ? { ...project, color: newColor }
+                : project
+            ),
+          })),
+
+        updateTaskCardColor: (
+          areaId: string,
+          taskCardId: string,
+          newColor: TaskCard['color'],
+          areaType: AreaType
+        ) =>
+          set((state) => {
+            const targetArray =
+              areaType === 'practice' ? 'practiceAreas' : 'projects'
+            return {
+              [targetArray]: state[targetArray].map((area) =>
+                area.id === areaId
+                  ? {
+                      ...area,
+                      taskCards: area.taskCards.map((card) =>
+                        card.id === taskCardId
+                          ? { ...card, color: newColor }
+                          : card
+                      ),
+                    }
+                  : area
+              ),
+            }
+          }),
+
         // Theme action
         // TODO: Implement flash-free dark mode to prevent hydration mismatch
         // Consider: blocking script in <head> or next-themes library for production
@@ -446,7 +494,7 @@ export const useAppStore = create<AppState>()(
                           id: generateId(),
                           name,
                           isExpanded: true,
-                          color: 'purple',
+                          color: 'gray',
                           todos: [],
                           createdAt: new Date(),
                         },

@@ -10,7 +10,17 @@ export interface TaskCard {
   id: string
   name: string
   isExpanded: boolean
-  color: 'green' | 'purple' | 'orange' | 'blue' | 'red'
+  color:
+    | 'green'
+    | 'purple'
+    | 'orange'
+    | 'blue'
+    | 'red'
+    | 'yellow'
+    | 'teal'
+    | 'indigo'
+    | 'pink'
+    | 'gray'
   todos: Todo[]
   createdAt: Date
 }
@@ -18,7 +28,17 @@ export interface TaskCard {
 export interface PracticeArea {
   id: string
   name: string
-  color: 'green' | 'purple' | 'orange' | 'blue' | 'red'
+  color:
+    | 'green'
+    | 'purple'
+    | 'orange'
+    | 'blue'
+    | 'red'
+    | 'yellow'
+    | 'teal'
+    | 'indigo'
+    | 'pink'
+    | 'gray'
   taskCards: TaskCard[]
   createdAt: Date
 }
