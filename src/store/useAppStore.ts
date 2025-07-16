@@ -298,13 +298,16 @@ export const useAppStore = create<AppState>()(
         activeProjectId: null,
         activeView: 'practice-area',
         isSidebarOpen: false,
-        isDarkMode: false,
+        // isDarkMode: true,
         practiceAreas: initialPracticeAreas,
         projects: initialProjects,
 
         // Timer state
         activeTimer: null,
         timers: {}, // Daily timer records organized by date
+
+        _hasHydrated: false,
+        setHasHydrated: (state: boolean) => set({ _hasHydrated: state }),
 
         // Navigation actions
         setActivePracticeArea: (id: string) =>
@@ -371,24 +374,6 @@ export const useAppStore = create<AppState>()(
                   : area
               ),
             }
-          }),
-
-        // Theme action
-        // TODO: Implement flash-free dark mode to prevent hydration mismatch
-        // Consider: blocking script in <head> or next-themes library for production
-        // Current implementation may cause brief light->dark flash on page load
-        toggleTheme: () =>
-          set((state) => {
-            const newDarkMode = !state.isDarkMode
-
-            // Update DOM immediately
-            if (newDarkMode) {
-              document.documentElement.classList.add('dark')
-            } else {
-              document.documentElement.classList.remove('dark')
-            }
-
-            return { isDarkMode: newDarkMode }
           }),
 
         // Timer actions
@@ -754,23 +739,17 @@ export const useAppStore = create<AppState>()(
         projects: state.projects,
         activePracticeAreaId: state.activePracticeAreaId,
         activeProjectId: state.activeProjectId,
-        isDarkMode: state.isDarkMode,
         timers: state.timers,
-        // Note: activeTimer is not persisted - timers don't survive page refresh
-        // TODO: Fix hydration flicker - theme resets to light on page refresh
-        // Plan: Integrate next-themes library or implement blocking script in <head>
-        // For now, accepting UX tradeoff to maintain centralized state architecture
       }),
       onRehydrateStorage: () => (state) => {
-        // Apply theme to DOM when store rehydrates
-        // TODO: This causes hydration mismatch - investigate next-themes integration
-        if (state?.isDarkMode) {
-          document.documentElement.classList.add('dark')
-        } else {
-          document.documentElement.classList.remove('dark')
-        }
+        // This runs when Zustand finishes loading from localStorage
+        state?.setHasHydrated(true)
       },
     }
   )
 )
+
+export const useStoreHydration = () => {
+  return useAppStore((state) => state._hasHydrated)
+}
 

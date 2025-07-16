@@ -2,7 +2,7 @@
 import { PracticeArea, TaskCard } from './practice'
 import { ProjectArea } from './project'
 import { ViewType, AreaType } from './ui'
-import { TimerDayRecord, ActiveTimer } from './timer' // Import timer types
+import { TimerDayRecord, ActiveTimer } from './timer'
 
 export interface AppState {
   // Navigation state
@@ -11,27 +11,28 @@ export interface AppState {
   activeView: ViewType
   isSidebarOpen: boolean
 
-  // Theme state
-  isDarkMode: boolean
-
   // Data state
   practiceAreas: PracticeArea[]
   projects: ProjectArea[]
 
   // Timer state
-  // Timer state (from TimerState interface)
   activeTimer: ActiveTimer | null
   timers: { [date: string]: TimerDayRecord[] }
+
+  _hasHydrated: boolean
+  setHasHydrated: (state: boolean) => void
 
   // Color update actions
   updatePracticeAreaColor: (
     areaId: string,
     newColor: PracticeArea['color']
   ) => void
+
   updateProjectColor: (
     projectId: string,
     newColor: ProjectArea['color']
   ) => void
+
   updateTaskCardColor: (
     areaId: string,
     taskCardId: string,
@@ -44,7 +45,6 @@ export interface AppState {
   setActiveProject: (id: string) => void
   setActiveView: (view: ViewType) => void
   setSidebarOpen: (isOpen: boolean) => void
-  toggleTheme: () => void
 
   // CRUD operations
   addPracticeArea: (name: string, color: PracticeArea['color']) => void

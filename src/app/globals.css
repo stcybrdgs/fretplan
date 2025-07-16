@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  @apply dark;
+}
+
 /* Custom utilities for our purple theme */
 @layer utilities {
   .bg-primary {
@@ -35,3 +39,4 @@
     background: #6b7280;
   }
 }
+

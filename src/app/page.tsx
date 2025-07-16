@@ -1,5 +1,5 @@
 'use client'
-
+import { useTheme } from 'next-themes'
 import { useState, useEffect } from 'react'
 import { Menu, Sun, Moon, Mail, Plus } from 'lucide-react'
 import { useAppStore } from '@/store/useAppStore'
@@ -17,11 +17,14 @@ import Sidebar from '@/app/components/Sidebar'
 import { CreatePracticeAreaModal } from '@/app/components/modals/CreatePracticeAreaModal'
 import { CreateProjectModal } from '@/app/components/modals/CreateProjectModal'
 import { CreateTaskCardModal } from '@/app/components/modals/CreateTaskCardModal'
-
+import { ContactModal } from '@/app/components/modals/ContactModal'
+import { useStoreHydration } from '@/store/useAppStore'
 // import DigitalClock from '@/app/components/DigitalClock' // test-only clock component
 
 export default function Home() {
-  // Zustand store
+  const storeHydrated = useStoreHydration()
+  const { theme, setTheme } = useTheme()
+  const [themeMounted, setThemeMounted] = useState(false)
   const {
     practiceAreas,
     projects,
@@ -29,14 +32,12 @@ export default function Home() {
     activeProjectId,
     activeView,
     isSidebarOpen,
-    isDarkMode,
     activeTimer,
     timers,
     setActivePracticeArea,
     setActiveProject,
     setActiveView,
     setSidebarOpen,
-    toggleTheme,
     addPracticeArea,
     addProject,
     addTaskCard,
@@ -58,14 +59,6 @@ export default function Home() {
 
   // Force re-render every second for timer display updates
   const [, forceUpdate] = useState({})
-  useEffect(() => {
-    const interval = setInterval(() => {
-      forceUpdate({}) // Trigger re-render for timer display
-    }, 1000)
-
-    return () => clearInterval(interval)
-  }, [])
-
   const [colorPickerState, setColorPickerState] = useState<ColorPickerState>({
     isOpen: false,
     position: { x: 0, y: 0 },
@@ -74,39 +67,51 @@ export default function Home() {
     targetName: '',
     currentColor: 'gray',
   })
-
   const [confirmationModal, setConfirmationModal] = useState({
     isOpen: false,
     title: '',
     message: '',
     onConfirm: () => {},
   })
-
   const [editingAreaId, setEditingAreaId] = useState<string | null>(null)
-
   const [editingName, setEditingName] = useState('')
-
   const [selectedTaskCardId, setSelectedTaskCardId] = useState<string | null>(
     null
   )
-
   const [selectedSidebarItemId, setSelectedSidebarItemId] = useState<
     string | null
   >(null)
-
   const [showCreatePracticeAreaModal, setShowCreatePracticeAreaModal] =
     useState(false)
   const [showCreateProjectModal, setShowCreateProjectModal] = useState(false)
   const [showCreateTaskCardModal, setShowCreateTaskCardModal] = useState(false)
+  const [showContactModal, setShowContactModal] = useState(false)
 
-  // Apply theme on component mount (for initial load)
   useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-    }
-  }, [isDarkMode])
+    setThemeMounted(true)
+  }, [])
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      forceUpdate({}) // Trigger re-render for timer display
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [])
+
+  // Show loading until both are ready
+  if (!themeMounted || !storeHydrated) {
+    return (
+      <div className='min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center'>
+        <div className='text-center'>
+          <div className='w-8 h-8 border-2 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-2'></div>
+          <p className='text-sm text-gray-600 dark:text-gray-400'>
+            Loading FretTime...
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   // Color picker handlers
   const openColorPicker = (
@@ -440,23 +445,26 @@ export default function Home() {
 
           {/* Right side controls */}
           <div className='flex items-center space-x-4'>
-            {/* Theme toggle */}
+            {/* Theme toggle - simplified bc we now wait for hydration */}
             <button
-              onClick={toggleTheme}
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
               className='flex items-center space-x-2 p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors'
             >
-              {isDarkMode ? (
+              {theme === 'dark' ? (
                 <Sun className='w-4 h-4' />
               ) : (
                 <Moon className='w-4 h-4' />
               )}
               <span className='text-sm font-medium hidden md:block'>
-                {isDarkMode ? 'Light' : 'Dark'}
+                {theme === 'dark' ? 'Light' : 'Dark'}
               </span>
             </button>
 
             {/* Contact button */}
-            <button className='flex items-center space-x-2 p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors'>
+            <button
+              onClick={() => setShowContactModal(true)}
+              className='flex items-center space-x-2 p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors'
+            >
               <Mail className='w-4 h-4' />
               <span className='text-sm font-medium hidden md:block'>
                 Contact
@@ -517,7 +525,6 @@ export default function Home() {
                     </button>
                   </div>
 
-                  {/* Task Cards */}
                   {/* Task Cards */}
                   <div className='space-y-4'>
                     {activeArea.taskCards.map((card: TaskCard) => (
@@ -588,6 +595,7 @@ export default function Home() {
           </div>
         </main>
       </div>
+
       {/* Mobile Overlay */}
       {isSidebarOpen && (
         <div
@@ -595,6 +603,7 @@ export default function Home() {
           onClick={toggleSidebar}
         ></div>
       )}
+
       {/* Context Menu (replaces old ColorPicker) */}
       <ItemContextMenu
         isOpen={colorPickerState.isOpen}
@@ -605,6 +614,7 @@ export default function Home() {
         onDelete={handleDelete}
         onClose={closeColorPicker}
       />
+
       {/* Confirmation Modal */}
       <ConfirmationModal
         isOpen={confirmationModal.isOpen}
@@ -639,6 +649,12 @@ export default function Home() {
         onClose={() => setShowCreateTaskCardModal(false)}
         onSave={handleSaveTaskCard}
         areaType={activeAreaType as 'practice' | 'project'}
+      />
+
+      {/* Contact Modal */}
+      <ContactModal
+        isOpen={showContactModal}
+        onClose={() => setShowContactModal(false)}
       />
     </div>
   )
