@@ -1,10 +1,14 @@
 import React, { useState } from 'react'
 import { BaseModal } from './BaseModal'
 
-interface FormModalProps {
+interface FormData {
+  [key: string]: string | number | boolean
+}
+
+interface FormModalProps<T = FormData> {
   isOpen: boolean
   onClose: () => void
-  onSave: (data: any) => void
+  onSave: (data: T) => void
   title: string
   saveButtonText?: string
   cancelButtonText?: string
@@ -13,7 +17,7 @@ interface FormModalProps {
   size?: 'sm' | 'md' | 'lg' | 'xl'
 }
 
-export const FormModal: React.FC<FormModalProps> = ({
+export const FormModal = <T extends FormData = FormData>({
   isOpen,
   onClose,
   onSave,
@@ -23,8 +27,8 @@ export const FormModal: React.FC<FormModalProps> = ({
   isLoading = false,
   children,
   size = 'md',
-}) => {
-  const [formData, setFormData] = useState<any>({})
+}: FormModalProps<T>) => {
+  const [formData, setFormData] = useState<T>({} as T)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -32,7 +36,7 @@ export const FormModal: React.FC<FormModalProps> = ({
   }
 
   const handleClose = () => {
-    setFormData({}) // Reset form data
+    setFormData({} as T) // Reset form data
     onClose()
   }
 
@@ -45,7 +49,7 @@ export const FormModal: React.FC<FormModalProps> = ({
             return React.cloneElement(child, {
               formData,
               setFormData,
-            } as any)
+            } as React.Attributes)
           }
           return child
         })}
@@ -71,3 +75,4 @@ export const FormModal: React.FC<FormModalProps> = ({
     </BaseModal>
   )
 }
+
