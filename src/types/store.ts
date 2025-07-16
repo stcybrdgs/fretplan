@@ -56,6 +56,24 @@ export interface AppState {
     name: string,
     areaType: AreaType
   ) => void
+
+  renamePracticeArea: (areaId: string, newName: string) => void
+  renameProject: (projectId: string, newName: string) => void
+  renameTaskCard: (
+    areaId: string,
+    taskCardId: string,
+    newName: string,
+    areaType: AreaType
+  ) => void
+  deletePracticeArea: (areaId: string) => void
+  deleteProject: (projectId: string) => void
+  deleteTaskCard: (
+    areaId: string,
+    taskCardId: string,
+    areaType: AreaType
+  ) => void
+
+  // Toggle actions
   toggleTodo: (
     areaId: string,
     taskCardId: string,

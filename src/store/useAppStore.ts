@@ -542,6 +542,150 @@ export const useAppStore = create<AppState>()(
             }
           }),
 
+        // Rename operations
+        renamePracticeArea: (areaId: string, newName: string) =>
+          set((state) => ({
+            practiceAreas: state.practiceAreas.map((area) =>
+              area.id === areaId ? { ...area, name: newName.trim() } : area
+            ),
+          })),
+
+        renameProject: (projectId: string, newName: string) =>
+          set((state) => ({
+            projects: state.projects.map((project) =>
+              project.id === projectId
+                ? { ...project, name: newName.trim() }
+                : project
+            ),
+          })),
+
+        renameTaskCard: (
+          areaId: string,
+          taskCardId: string,
+          newName: string,
+          areaType: AreaType
+        ) =>
+          set((state) => {
+            const targetArray =
+              areaType === 'practice' ? 'practiceAreas' : 'projects'
+            return {
+              [targetArray]: state[targetArray].map((area) =>
+                area.id === areaId
+                  ? {
+                      ...area,
+                      taskCards: area.taskCards.map((card) =>
+                        card.id === taskCardId
+                          ? { ...card, name: newName.trim() }
+                          : card
+                      ),
+                    }
+                  : area
+              ),
+            }
+          }),
+
+        // Delete operations
+        deletePracticeArea: (areaId: string) =>
+          set((state) => {
+            const updatedAreas = state.practiceAreas.filter(
+              (area) => area.id !== areaId
+            )
+
+            // If we're deleting the active area, switch to first available area or null
+            let newActivePracticeAreaId = state.activePracticeAreaId
+            if (state.activePracticeAreaId === areaId) {
+              newActivePracticeAreaId =
+                updatedAreas.length > 0 ? updatedAreas[0].id : null
+            }
+
+            return {
+              practiceAreas: updatedAreas,
+              activePracticeAreaId: newActivePracticeAreaId,
+              // If no practice areas left and no projects, default to dashboard
+              activeView:
+                newActivePracticeAreaId === null && state.projects.length === 0
+                  ? 'dashboard'
+                  : state.activeView,
+            }
+          }),
+
+        deleteProject: (projectId: string) =>
+          set((state) => {
+            const updatedProjects = state.projects.filter(
+              (project) => project.id !== projectId
+            )
+
+            // If we're deleting the active project, switch to first available project or null
+            let newActiveProjectId = state.activeProjectId
+            if (state.activeProjectId === projectId) {
+              newActiveProjectId =
+                updatedProjects.length > 0 ? updatedProjects[0].id : null
+            }
+
+            return {
+              projects: updatedProjects,
+              activeProjectId: newActiveProjectId,
+              // If no projects left and no practice areas, default to dashboard
+              activeView:
+                newActiveProjectId === null && state.practiceAreas.length === 0
+                  ? 'dashboard'
+                  : state.activeView,
+            }
+          }),
+
+        deleteTaskCard: (
+          areaId: string,
+          taskCardId: string,
+          areaType: AreaType
+        ) =>
+          set((state) => {
+            const targetArray =
+              areaType === 'practice' ? 'practiceAreas' : 'projects'
+
+            // Get all todo IDs from the task card being deleted for timer cleanup
+            const area = state[targetArray].find((a) => a.id === areaId)
+            const taskCard = area?.taskCards.find((c) => c.id === taskCardId)
+            const todoIdsToDelete = taskCard?.todos.map((todo) => todo.id) || []
+
+            // Remove task card
+            const updatedState = {
+              [targetArray]: state[targetArray].map((area) =>
+                area.id === areaId
+                  ? {
+                      ...area,
+                      taskCards: area.taskCards.filter(
+                        (card) => card.id !== taskCardId
+                      ),
+                    }
+                  : area
+              ),
+            }
+
+            // Clean up timers for deleted todos
+            const cleanedTimers: { [date: string]: TimerDayRecord[] } = {}
+            Object.entries(state.timers).forEach(([date, dayRecords]) => {
+              cleanedTimers[date] = dayRecords.filter(
+                (record) => !todoIdsToDelete.includes(record.todoId)
+              )
+            })
+
+            // Stop active timer if it belongs to a deleted todo
+            let newActiveTimer = state.activeTimer
+            if (
+              state.activeTimer &&
+              todoIdsToDelete.includes(state.activeTimer.todoId)
+            ) {
+              newActiveTimer = null
+            }
+
+            return {
+              ...state,
+              ...updatedState,
+              timers: cleanedTimers,
+              activeTimer: newActiveTimer,
+            }
+          }),
+
         toggleTodo: (
           areaId: string,
           taskCardId: string,

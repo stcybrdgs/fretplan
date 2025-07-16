@@ -4,6 +4,7 @@ export interface ColorPickerState {
   position: { x: number; y: number }
   targetId: string
   targetType: 'practice-area' | 'project' | 'task-card'
+  targetName: string
   currentColor: string
   areaId?: string // For task cards, we need to know which area they belong to
   areaType?: 'practice' | 'project' // For task cards
@@ -16,3 +17,4 @@ export interface ColorPickerProps {
   onColorSelect: (color: string) => void
   onClose: () => void
 }
+

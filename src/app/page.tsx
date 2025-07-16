@@ -21,8 +21,9 @@ import {
   Todo,
   ColorPickerState,
 } from '@/types'
-import ColorPicker from '@/app/components/ColorPicker'
 import ScrollableText from '@/app/components/ScrollableText'
+import ConfirmationModal from '@/app/components/ConfirmationModal'
+import ContextMenu from '@/app/components/ContextMenu'
 // import DigitalClock from '@/app/components/DigitalClock' // test-only clock component
 
 export default function Home() {
@@ -53,6 +54,12 @@ export default function Home() {
     updatePracticeAreaColor,
     updateProjectColor,
     updateTaskCardColor,
+    renamePracticeArea,
+    renameProject,
+    renameTaskCard,
+    deletePracticeArea,
+    deleteProject,
+    deleteTaskCard,
   } = useAppStore()
 
   // Force re-render every second for timer display updates
@@ -65,14 +72,25 @@ export default function Home() {
     return () => clearInterval(interval)
   }, [])
 
-  // Color picker state
   const [colorPickerState, setColorPickerState] = useState<ColorPickerState>({
     isOpen: false,
     position: { x: 0, y: 0 },
     targetId: '',
     targetType: 'practice-area',
+    targetName: '',
     currentColor: 'gray',
   })
+
+  const [confirmationModal, setConfirmationModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  })
+
+  const [editingAreaId, setEditingAreaId] = useState<string | null>(null)
+
+  const [editingName, setEditingName] = useState('')
 
   // Apply theme on component mount (for initial load)
   useEffect(() => {
@@ -88,16 +106,25 @@ export default function Home() {
     e: React.MouseEvent,
     targetId: string,
     targetType: ColorPickerState['targetType'],
+    targetName: string,
     currentColor: string,
     areaId?: string,
     areaType?: 'practice' | 'project'
   ) => {
+    console.log('🎯 openColorPicker called:', {
+      targetId,
+      targetType,
+      targetName,
+      currentColor,
+    })
     e.preventDefault() // Prevent browser context menu
+    e.stopPropagation()
     setColorPickerState({
       isOpen: true,
       position: { x: e.clientX, y: e.clientY },
       targetId,
       targetType,
+      targetName,
       currentColor,
       areaId,
       areaType,
@@ -105,21 +132,26 @@ export default function Home() {
   }
 
   const closeColorPicker = () => {
+    console.log('🔴 closeColorPicker called')
     setColorPickerState((prev) => ({ ...prev, isOpen: false }))
   }
 
   const handleColorSelect = (newColor: string) => {
+    console.log('🎨 handleColorSelect called:', { newColor, colorPickerState })
     const { targetId, targetType, areaId, areaType } = colorPickerState
 
     switch (targetType) {
       case 'practice-area':
+        console.log('🔄 Updating practice area color')
         updatePracticeAreaColor(targetId, newColor as PracticeArea['color'])
         break
       case 'project':
+        console.log('🔄 Updating project color')
         updateProjectColor(targetId, newColor as ProjectArea['color'])
         break
       case 'task-card':
         if (areaId && areaType) {
+          console.log('🔄 Updating task card color')
           updateTaskCardColor(
             areaId,
             targetId,
@@ -137,6 +169,99 @@ export default function Home() {
       areaId,
       areaType,
     })
+
+    closeColorPicker()
+  }
+
+  // Handlers for rename operations
+  const handleStartRename = () => {
+    console.log('✏️ handleStartRename called:', colorPickerState)
+    setEditingAreaId(colorPickerState.targetId)
+    setEditingName(colorPickerState.targetName)
+    closeColorPicker()
+  }
+
+  const handleFinishRename = (
+    id: string,
+    itemType: 'practice' | 'project' | 'task-card'
+  ) => {
+    console.log('✅ handleFinishRename called:', {
+      id,
+      itemType,
+      editingName,
+    })
+    if (
+      editingName.trim() &&
+      editingName.trim() !== colorPickerState.targetName
+    ) {
+      if (itemType === 'practice') {
+        renamePracticeArea(id, editingName.trim())
+      } else if (itemType === 'project') {
+        renameProject(id, editingName.trim())
+      } else if (itemType === 'task-card') {
+        // For task cards, we need areaId and areaType from colorPickerState
+        const { areaId, areaType } = colorPickerState
+        if (areaId && areaType) {
+          renameTaskCard(areaId, id, editingName.trim(), areaType)
+        }
+      }
+    }
+    setEditingAreaId(null)
+    setEditingName('')
+  }
+
+  const handleCancelRename = () => {
+    console.log('❌ handleCancelRename called')
+    setEditingAreaId(null)
+    setEditingName('')
+  }
+
+  // Handlers for delete operations
+  const handleDelete = () => {
+    console.log('🗑️ handleDelete called:', colorPickerState)
+    const { targetType, targetName, targetId, areaId, areaType } =
+      colorPickerState
+
+    if (targetType === 'practice-area') {
+      console.log('🚨 Setting up practice area delete confirmation')
+      setConfirmationModal({
+        isOpen: true,
+        title: 'Delete Practice Area',
+        message: `Are you sure you want to delete "${targetName}"? This will permanently remove all task cards and todos within this practice area.`,
+        onConfirm: () => {
+          console.log('💥 Deleting practice area:', targetId)
+          deletePracticeArea(targetId)
+          setConfirmationModal({ ...confirmationModal, isOpen: false })
+        },
+      })
+    } else if (targetType === 'project') {
+      console.log('🚨 Setting up project delete confirmation')
+      setConfirmationModal({
+        isOpen: true,
+        title: 'Delete Project',
+        message: `Are you sure you want to delete "${targetName}"? This will permanently remove all task cards and todos within this project.`,
+        onConfirm: () => {
+          console.log('💥 Deleting project:', targetId)
+          deleteProject(targetId)
+          setConfirmationModal({ ...confirmationModal, isOpen: false })
+        },
+      })
+    } else if (targetType === 'task-card') {
+      console.log('🚨 Setting up task card delete confirmation')
+      setConfirmationModal({
+        isOpen: true,
+        title: 'Delete Task Card',
+        message: `Are you sure you want to delete "${targetName}"? This will permanently remove all todos and associated timer data within this task card.`,
+        onConfirm: () => {
+          console.log('💥 Deleting task card:', targetId)
+          if (areaId && areaType) {
+            deleteTaskCard(areaId, targetId, areaType)
+          }
+          setConfirmationModal({ ...confirmationModal, isOpen: false })
+        },
+      })
+    }
+    closeColorPicker() // Close the context menu when opening delete modal
   }
 
   // Timer helper functions
@@ -360,14 +485,42 @@ export default function Home() {
                       area.color
                     )} rounded-full flex-shrink-0`}
                   ></span>
-                  <ScrollableText className='flex-1'>
-                    <span>{area.name}</span>
-                  </ScrollableText>
+                  {/* Inline editing or display name */}
+                  {editingAreaId === area.id ? (
+                    <input
+                      type='text'
+                      value={editingName}
+                      onChange={(e) => setEditingName(e.target.value)}
+                      onBlur={() => handleFinishRename(area.id, 'practice')}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleFinishRename(area.id, 'practice')
+                        } else if (e.key === 'Escape') {
+                          handleCancelRename()
+                        }
+                      }}
+                      className='flex-1 bg-transparent border-b border-purple-500 outline-none text-gray-900 dark:text-white'
+                      autoFocus
+                      onFocus={(e) => e.target.select()}
+                    />
+                  ) : (
+                    <ScrollableText className='flex-1'>
+                      <span>{area.name}</span>
+                    </ScrollableText>
+                  )}
+                  {/* context menu button */}
                   <button
-                    onClick={(e) =>
-                      openColorPicker(e, area.id, 'practice-area', area.color)
-                    }
-                    className='group text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white p-1 rounded-lg transition-colors flex-shrink-0'
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      openColorPicker(
+                        e,
+                        area.id,
+                        'practice-area',
+                        area.name,
+                        area.color
+                      )
+                    }}
+                    className='group text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors flex-shrink-0'
                     title='More options'
                   >
                     <MoreVertical className='w-4 h-4 group-hover:scale-125 transition-all duration-300' />
@@ -407,14 +560,42 @@ export default function Home() {
                         project.color
                       )} rounded-full flex-shrink-0`}
                     ></span>
-                    <ScrollableText className='flex-1'>
-                      <span>{project.name}</span>
-                    </ScrollableText>
+                    {/* Inline editing or display name */}
+                    {editingAreaId === project.id ? (
+                      <input
+                        type='text'
+                        value={editingName}
+                        onChange={(e) => setEditingName(e.target.value)}
+                        onBlur={() => handleFinishRename(project.id, 'project')}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            handleFinishRename(project.id, 'project')
+                          } else if (e.key === 'Escape') {
+                            handleCancelRename()
+                          }
+                        }}
+                        className='flex-1 bg-transparent border-b border-purple-500 outline-none text-gray-900 dark:text-white'
+                        autoFocus
+                        onFocus={(e) => e.target.select()}
+                      />
+                    ) : (
+                      <ScrollableText className='flex-1'>
+                        <span>{project.name}</span>
+                      </ScrollableText>
+                    )}
+                    {/* context menu button */}
                     <button
-                      onClick={(e) =>
-                        openColorPicker(e, project.id, 'project', project.color)
-                      }
-                      className='group text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white p-1 rounded-lg transition-colors flex-shrink-0'
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        openColorPicker(
+                          e,
+                          project.id,
+                          'project',
+                          project.name,
+                          project.color
+                        )
+                      }}
+                      className='group text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors'
                       title='More options'
                     >
                       <MoreVertical className='w-4 h-4 group-hover:scale-125 transition-all duration-300' />
@@ -490,7 +671,7 @@ export default function Home() {
                         key={card.id}
                         className='bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 ease-in-out hover:border-purple-200 dark:hover:border-purple-700'
                       >
-                        {/* Task Card Header with right-click */}
+                        {/* Task Card Header */}
                         <div
                           className={`p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between transition-all duration-200 ease-in-out ${
                             card.isExpanded
@@ -504,18 +685,9 @@ export default function Home() {
                               activeAreaType as 'practice' | 'project'
                             )
                           }
-                          onContextMenu={(e) =>
-                            openColorPicker(
-                              e,
-                              card.id,
-                              'task-card',
-                              card.color,
-                              activeArea.id,
-                              activeAreaType as 'practice' | 'project'
-                            )
-                          }
                         >
                           <div className='flex items-center space-x-3'>
+                            {/* color dot */}
                             <span
                               className={`w-3 h-3 ${getColorClass(
                                 card.color
@@ -523,22 +695,68 @@ export default function Home() {
                                 card.isExpanded ? 'scale-110' : 'scale-100'
                               }`}
                             ></span>
-                            <ScrollableText>
-                              <h3 className='text-lg font-medium text-gray-900 dark:text-white transition-colors duration-200'>
-                                {card.name}
-                              </h3>
-                            </ScrollableText>
-                          </div>
-                          <div
-                            className={`transition-transform duration-300 ease-in-out ${
-                              card.isExpanded ? 'rotate-0' : 'rotate-0'
-                            }`}
-                          >
-                            {card.isExpanded ? (
-                              <ChevronDown className='w-5 h-5 text-gray-500 dark:text-gray-400 transition-colors duration-200' />
+
+                            {/* Inline editing or display name for task card */}
+                            {editingAreaId === card.id ? (
+                              <input
+                                type='text'
+                                value={editingName}
+                                onChange={(e) => setEditingName(e.target.value)}
+                                onBlur={() =>
+                                  handleFinishRename(card.id, 'task-card')
+                                }
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    handleFinishRename(card.id, 'task-card')
+                                  } else if (e.key === 'Escape') {
+                                    handleCancelRename()
+                                  }
+                                }}
+                                className='flex-1 bg-transparent border-b border-purple-500 outline-none text-gray-900 dark:text-white text-lg font-medium'
+                                autoFocus
+                                onFocus={(e) => e.target.select()}
+                              />
                             ) : (
-                              <ChevronRight className='w-5 h-5 text-gray-500 dark:text-gray-400 transition-colors duration-200' />
+                              <ScrollableText>
+                                <h3 className='text-lg font-medium text-gray-900 dark:text-white transition-colors duration-200'>
+                                  {card.name}
+                                </h3>
+                              </ScrollableText>
                             )}
+                          </div>
+                          <div className='flex'>
+                            {/* context menu button */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                openColorPicker(
+                                  e,
+                                  card.id,
+                                  'task-card',
+                                  card.name,
+                                  card.color,
+                                  activeArea.id,
+                                  activeAreaType as 'practice' | 'project'
+                                )
+                              }}
+                              className='group mr-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors flex-shrink-0'
+                              title='More options'
+                            >
+                              <MoreVertical className='w-4 h-4 group-hover:scale-125 transition-all duration-300' />
+                            </button>
+
+                            {/* chevron */}
+                            <button
+                              className={`group text-gray-500 dark:text-gray-400  hover:text-gray-900 dark:hover:text-white  transition-transform duration-300 ease-in-out ${
+                                card.isExpanded ? 'rotate-0' : 'rotate-0'
+                              }`}
+                            >
+                              {card.isExpanded ? (
+                                <ChevronDown className='w-5 h-5 group-hover:scale-125 transition-all duration-300' />
+                              ) : (
+                                <ChevronRight className='w-5 h-5 group-hover:scale-125 transition-all duration-300' />
+                              )}
+                            </button>
                           </div>
                         </div>
 
@@ -644,8 +862,8 @@ export default function Home() {
                                           todo.completed
                                             ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed scale-95 opacity-50'
                                             : isTimerActiveForTodo(todo.id)
-                                            ? 'text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer hover:scale-105 active:scale-95 shadow-sm bg-red-50/50 dark:bg-red-900/10'
-                                            : 'text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 cursor-pointer hover:scale-105 active:scale-95 shadow-sm'
+                                            ? 'text-red-600 bg-red-300/30 dark:bg-red-900/20 hover:bg-red-600/20 dark:hover:bg-red-900/40 cursor-pointer hover:scale-105 active:scale-95 shadow-sm'
+                                            : 'text-green-600 hover:bg-green-600/20 dark:hover:bg-green-900/60 cursor-pointer hover:scale-105 active:scale-95 shadow-sm'
                                         }`}
                                         title={
                                           todo.completed
@@ -751,13 +969,29 @@ export default function Home() {
         ></div>
       )}
 
-      {/* Color Picker */}
-      <ColorPicker
+      {/* Context Menu (replaces old ColorPicker) */}
+      <ContextMenu
         isOpen={colorPickerState.isOpen}
         position={colorPickerState.position}
         currentColor={colorPickerState.currentColor}
         onColorSelect={handleColorSelect}
+        onRename={handleStartRename}
+        onDelete={handleDelete}
         onClose={closeColorPicker}
+      />
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={confirmationModal.isOpen}
+        title={confirmationModal.title}
+        message={confirmationModal.message}
+        confirmText='Delete'
+        cancelText='Cancel'
+        confirmButtonStyle='danger'
+        onConfirm={confirmationModal.onConfirm}
+        onCancel={() =>
+          setConfirmationModal({ ...confirmationModal, isOpen: false })
+        }
       />
     </div>
   )
