@@ -47,10 +47,38 @@ export const BaseContextMenu: React.FC<BaseContextMenuProps> = ({
 
   if (!isOpen) return null
 
-  // Calculate position to keep menu in viewport
+  // Smart positioning to avoid viewport edges
+  const menuWidth = 200
+  const menuHeight = 200 // Approximate height
+  const padding = 16 // Minimum distance from edges
+
+  let adjustedX = position.x
+  let adjustedY = position.y
+
+  // Horizontal positioning
+  if (position.x + menuWidth + padding > window.innerWidth) {
+    // If menu would overflow right edge, position to the left of click
+    adjustedX = position.x - menuWidth - padding
+    // Ensure we don't go off the left edge
+    adjustedX = Math.max(padding, adjustedX)
+  } else {
+    // Normal positioning, but ensure minimum padding from right edge
+    adjustedX = Math.min(position.x, window.innerWidth - menuWidth - padding)
+  }
+
+  // Vertical positioning
+  if (position.y + menuHeight + padding > window.innerHeight) {
+    // If menu would overflow bottom edge, position above click
+    adjustedY = position.y - menuHeight - padding
+    // Ensure we don't go off the top edge
+    adjustedY = Math.max(padding, adjustedY)
+  } else {
+    // Normal positioning, but ensure minimum padding from bottom edge
+    adjustedY = Math.min(position.y, window.innerHeight - menuHeight - padding)
+  }
   const adjustedPosition = {
-    x: Math.min(position.x, window.innerWidth - 200), // 200px menu width
-    y: Math.min(position.y, window.innerHeight - 200), // Approximate menu height
+    x: adjustedX,
+    y: adjustedY,
   }
 
   return (
@@ -67,3 +95,4 @@ export const BaseContextMenu: React.FC<BaseContextMenuProps> = ({
     </div>
   )
 }
+

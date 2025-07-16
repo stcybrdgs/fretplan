@@ -12,6 +12,7 @@ interface SidebarProps {
   activePracticeAreaId: string | null
   activeProjectId: string | null
   activeView: ViewType
+  selectedSidebarItemId: string | null // prop for selected state
   editingAreaId: string | null
   editingName: string
   setEditingName: (name: string) => void
@@ -38,6 +39,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   activePracticeAreaId,
   activeProjectId,
   activeView,
+  selectedSidebarItemId,
   editingAreaId,
   editingName,
   setEditingName,
@@ -72,14 +74,20 @@ const Sidebar: React.FC<SidebarProps> = ({
         {practiceAreas.map((area: PracticeArea) => (
           <div
             key={area.id}
-            className='flex items-center justify-between w-full'
+            className={`flex items-center justify-between w-full transition-all duration-200 ${
+              selectedSidebarItemId === area.id
+                ? 'ring-1 ring-purple-500 dark:ring-purple-400 rounded-lg bg-purple-50 dark:bg-purple-900/20'
+                : ''
+            }`}
           >
             <div
               onClick={() => onSetActivePracticeArea(area.id)}
-              className={`flex items-center space-x-3 flex-1 min-w-0 text-left p-2 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
+              className={`flex items-center space-x-3 flex-1 min-w-0 text-left p-2 rounded-lg cursor-pointer transition-colors ${
                 activePracticeAreaId === area.id
                   ? 'bg-purple-500/20 hover:bg-purple-500/20 dark:bg-purple-500/30 dark:hover:bg-purple-500/30 text-gray-900 dark:text-white'
-                  : 'text-gray-900 dark:text-white'
+                  : selectedSidebarItemId === area.id
+                  ? 'bg-transparent text-gray-900 dark:text-white'
+                  : 'text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'
               }`}
             >
               <span
@@ -147,14 +155,20 @@ const Sidebar: React.FC<SidebarProps> = ({
           {projects.map((project: ProjectArea) => (
             <div
               key={project.id}
-              className='flex items-center justify-between w-full'
+              className={`flex items-center justify-between w-full transition-all duration-200 ${
+                selectedSidebarItemId === project.id
+                  ? 'ring-1 ring-purple-500 dark:ring-purple-400 rounded-lg bg-purple-50 dark:bg-purple-900/20'
+                  : ''
+              }`}
             >
               <div
                 onClick={() => onSetActiveProject(project.id)}
-                className={`flex items-center space-x-3 flex-1 min-w-0 text-left p-2 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
+                className={`flex items-center space-x-3 flex-1 min-w-0 text-left p-2 rounded-lg cursor-pointer transition-colors ${
                   activeProjectId === project.id
                     ? 'bg-purple-500/20 hover:bg-purple-500/20 dark:bg-purple-500/30 dark:hover:bg-purple-500/30 text-gray-900 dark:text-white'
-                    : 'text-gray-900 dark:text-white'
+                    : selectedSidebarItemId === project.id
+                    ? 'bg-transparent text-gray-900 dark:text-white'
+                    : 'text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'
                 }`}
               >
                 <span
@@ -248,3 +262,4 @@ const Sidebar: React.FC<SidebarProps> = ({
 }
 
 export default Sidebar
+

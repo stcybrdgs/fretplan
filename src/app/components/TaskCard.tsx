@@ -14,6 +14,7 @@ interface TaskCardProps {
   areaId: string
   areaName: string
   areaType: AreaType
+  isSelected?: boolean // prop to indicate if this card's context menu is open
   isTimerActiveForTodo: (todoId: string) => boolean
   formatTime: (milliseconds: number) => string
   getDisplayTimeForTodo: (todoId: string) => number
@@ -51,6 +52,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   areaId,
   areaName,
   areaType,
+  isSelected = false, // Default to false
   isTimerActiveForTodo,
   formatTime,
   getDisplayTimeForTodo,
@@ -67,13 +69,24 @@ const TaskCard: React.FC<TaskCardProps> = ({
   onCancelRename,
 }) => {
   return (
-    <div className='bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 ease-in-out hover:border-purple-200 dark:hover:border-purple-700'>
+    <div
+      className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm transition-all duration-300 ease-in-out ${
+        isSelected
+          ? 'ring-1 ring-purple-500 dark:ring-purple-400 shadow-lg border-purple-300 dark:border-purple-600'
+          : 'hover:shadow-md hover:border-purple-200 dark:hover:border-purple-700'
+      }`}
+    >
       {/* Task Card Header */}
       <div
-        className={`p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between transition-all duration-200 ease-in-out ${
+        // className={`p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between transition-all duration-200 ease-in-out ${
+        className={`p-4 cursor-pointer flex items-center justify-between transition-all duration-200 ease-in-out ${
           card.isExpanded
             ? 'border-b border-gray-200 dark:border-gray-700 rounded-t-lg'
             : 'rounded-lg'
+        } ${
+          isSelected
+            ? 'bg-purple-50 dark:bg-purple-900/20'
+            : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
         }`}
         onClick={onToggleCard}
       >

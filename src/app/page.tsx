@@ -82,6 +82,14 @@ export default function Home() {
 
   const [editingName, setEditingName] = useState('')
 
+  const [selectedTaskCardId, setSelectedTaskCardId] = useState<string | null>(
+    null
+  )
+
+  const [selectedSidebarItemId, setSelectedSidebarItemId] = useState<
+    string | null
+  >(null)
+
   // Apply theme on component mount (for initial load)
   useEffect(() => {
     if (isDarkMode) {
@@ -109,6 +117,16 @@ export default function Home() {
     })
     e.preventDefault() // Prevent browser context menu
     e.stopPropagation()
+
+    // Set selected TaskCard if this is a task-card context menu
+    if (targetType === 'task-card') {
+      setSelectedTaskCardId(targetId)
+      setSelectedSidebarItemId(null) // Clear sidebar selection
+    } else if (targetType === 'practice-area' || targetType === 'project') {
+      setSelectedSidebarItemId(targetId)
+      setSelectedTaskCardId(null) // Clear task card selection
+    }
+
     setColorPickerState({
       isOpen: true,
       position: { x: e.clientX, y: e.clientY },
@@ -124,6 +142,8 @@ export default function Home() {
   const closeColorPicker = () => {
     console.log('🔴 closeColorPicker called')
     setColorPickerState((prev) => ({ ...prev, isOpen: false }))
+    setSelectedTaskCardId(null) // Clear selected state when menu closes
+    setSelectedSidebarItemId(null) // Clear both selections
   }
 
   const handleColorSelect = (newColor: string) => {
@@ -429,6 +449,7 @@ export default function Home() {
           activePracticeAreaId={activePracticeAreaId}
           activeProjectId={activeProjectId}
           activeView={activeView}
+          selectedSidebarItemId={selectedSidebarItemId}
           editingAreaId={editingAreaId}
           editingName={editingName}
           setEditingName={setEditingName}
@@ -481,6 +502,7 @@ export default function Home() {
                         areaId={activeArea.id}
                         areaName={activeArea.name}
                         areaType={activeAreaType as AreaType}
+                        isSelected={selectedTaskCardId === card.id}
                         isTimerActiveForTodo={isTimerActiveForTodo}
                         formatTime={formatTime}
                         getDisplayTimeForTodo={getDisplayTimeForTodo}
