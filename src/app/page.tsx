@@ -11,6 +11,7 @@ import {
   ChevronRight,
   Play,
   Square,
+  MoreVertical,
 } from 'lucide-react'
 import { useAppStore } from '@/store/useAppStore'
 import {
@@ -298,7 +299,7 @@ export default function Home() {
             {/* Theme toggle */}
             <button
               onClick={toggleTheme}
-              className='flex items-center space-x-2 p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors'
+              className='flex items-center space-x-2 p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors'
             >
               {isDarkMode ? (
                 <Sun className='w-4 h-4' />
@@ -311,7 +312,7 @@ export default function Home() {
             </button>
 
             {/* Contact button */}
-            <button className='flex items-center space-x-2 p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors'>
+            <button className='flex items-center space-x-2 p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors'>
               <Mail className='w-4 h-4' />
               <span className='text-sm font-medium hidden md:block'>
                 Contact
@@ -334,7 +335,7 @@ export default function Home() {
               <span>Practice Areas</span>
               <button
                 onClick={handleAddPracticeArea}
-                className='text-gray-900 dark:text-white p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors'
+                className='p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors'
               >
                 <Plus className='w-4 h-4' />
               </button>
@@ -342,36 +343,46 @@ export default function Home() {
 
             {/* Dynamic Practice Areas */}
             {practiceAreas.map((area: PracticeArea) => (
-              <button
+              <div
                 key={area.id}
-                onClick={() => setActivePracticeArea(area.id)}
-                onContextMenu={(e) =>
-                  openColorPicker(e, area.id, 'practice-area', area.color)
-                }
-                className={`flex items-center space-x-3 w-full text-left p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-                  activePracticeAreaId === area.id
-                    ? 'bg-purple-50 dark:bg-purple-900/20 text-gray-900 dark:text-white'
-                    : 'text-gray-900 dark:text-white'
-                }`}
+                className='flex items-center justify-between w-full'
               >
-                <span
-                  className={`w-2 h-2 ${getColorClass(
-                    area.color
-                  )} rounded-full flex-shrink-0`}
-                ></span>
-                <ScrollableText className='flex-1'>
-                  <span>{area.name}</span>
-                </ScrollableText>
-              </button>
+                <div
+                  onClick={() => setActivePracticeArea(area.id)}
+                  className={`flex items-center space-x-3 flex-1 min-w-0 text-left p-2 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
+                    activePracticeAreaId === area.id
+                      ? 'bg-purple-500/20 hover:bg-purple-500/20 dark:bg-purple-500/30 dark:hover:bg-purple-500/30 text-gray-900 dark:text-white'
+                      : 'text-gray-900 dark:text-white'
+                  }`}
+                >
+                  <span
+                    className={`w-2 h-2 ${getColorClass(
+                      area.color
+                    )} rounded-full flex-shrink-0`}
+                  ></span>
+                  <ScrollableText className='flex-1'>
+                    <span>{area.name}</span>
+                  </ScrollableText>
+                  <button
+                    onClick={(e) =>
+                      openColorPicker(e, area.id, 'practice-area', area.color)
+                    }
+                    className='group text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white p-1 rounded-lg transition-colors flex-shrink-0'
+                    title='More options'
+                  >
+                    <MoreVertical className='w-4 h-4 group-hover:scale-125 transition-all duration-300' />
+                  </button>
+                </div>
+              </div>
             ))}
 
             {/* Projects Section */}
             <div className='pt-4 mt-4 border-t border-gray-200 dark:border-gray-700'>
               <div className='text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-3 flex items-center justify-between'>
-                Projects
+                <span>Projects</span>
                 <button
                   onClick={handleAddProject}
-                  className='text-gray-900 dark:text-white p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors'
+                  className='p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors'
                 >
                   <Plus className='w-4 h-4' />
                 </button>
@@ -379,27 +390,37 @@ export default function Home() {
 
               {/* Dynamic Projects */}
               {projects.map((project: ProjectArea) => (
-                <button
+                <div
                   key={project.id}
-                  onClick={() => setActiveProject(project.id)}
-                  onContextMenu={(e) =>
-                    openColorPicker(e, project.id, 'project', project.color)
-                  }
-                  className={`flex items-center space-x-3 w-full text-left p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-                    activeProjectId === project.id
-                      ? 'bg-purple-50 dark:bg-purple-900/20 text-gray-900 dark:text-white'
-                      : 'text-gray-900 dark:text-white'
-                  }`}
+                  className='flex items-center justify-between w-full'
                 >
-                  <span
-                    className={`w-2 h-2 ${getColorClass(
-                      project.color
-                    )} rounded-full flex-shrink-0`}
-                  ></span>
-                  <ScrollableText className='flex-1'>
-                    <span>{project.name}</span>
-                  </ScrollableText>
-                </button>
+                  <div
+                    onClick={() => setActiveProject(project.id)}
+                    className={`flex items-center space-x-3 flex-1 min-w-0 text-left p-2 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
+                      activeProjectId === project.id
+                        ? 'bg-purple-500/20 hover:bg-purple-500/20 dark:bg-purple-500/30 dark:hover:bg-purple-500/30 text-gray-900 dark:text-white'
+                        : 'text-gray-900 dark:text-white'
+                    }`}
+                  >
+                    <span
+                      className={`w-2 h-2 ${getColorClass(
+                        project.color
+                      )} rounded-full flex-shrink-0`}
+                    ></span>
+                    <ScrollableText className='flex-1'>
+                      <span>{project.name}</span>
+                    </ScrollableText>
+                    <button
+                      onClick={(e) =>
+                        openColorPicker(e, project.id, 'project', project.color)
+                      }
+                      className='group text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white p-1 rounded-lg transition-colors flex-shrink-0'
+                      title='More options'
+                    >
+                      <MoreVertical className='w-4 h-4 group-hover:scale-125 transition-all duration-300' />
+                    </button>
+                  </div>
+                </div>
               ))}
             </div>
 
