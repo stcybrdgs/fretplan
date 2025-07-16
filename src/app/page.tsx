@@ -1,29 +1,20 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import {
-  Menu,
-  Sun,
-  Moon,
-  Mail,
-  Plus,
-  ChevronDown,
-  ChevronRight,
-  Play,
-  Square,
-  MoreVertical,
-} from 'lucide-react'
+import { Menu, Sun, Moon, Mail, Plus, MoreVertical } from 'lucide-react'
 import { useAppStore } from '@/store/useAppStore'
 import {
   PracticeArea,
   ProjectArea,
   TaskCard,
-  Todo,
   ColorPickerState,
+  AreaType,
 } from '@/types'
 import ScrollableText from '@/app/components/ScrollableText'
 import ConfirmationModal from '@/app/components/ConfirmationModal'
 import { ItemContextMenu } from '@/app/components/ItemContextMenu'
+import TaskCardComponent from '@/app/components/TaskCard'
+import { getColorClass } from '@/utils/colorUtils'
 // import DigitalClock from '@/app/components/DigitalClock' // test-only clock component
 
 export default function Home() {
@@ -344,23 +335,6 @@ export default function Home() {
   const activeArea = activePracticeArea || activeProject
   const activeAreaType = activePracticeArea ? 'practice' : 'project'
 
-  // Get color class for practice area dots
-  const getColorClass = (color: string) => {
-    const colorMap = {
-      red: 'bg-red-600',
-      orange: 'bg-orange-600',
-      yellow: 'bg-yellow-500',
-      green: 'bg-green-600',
-      teal: 'bg-teal-600',
-      blue: 'bg-blue-600',
-      indigo: 'bg-indigo-600',
-      purple: 'bg-purple-600',
-      pink: 'bg-pink-600',
-      gray: 'bg-gray-600',
-    }
-    return colorMap[color as keyof typeof colorMap] || 'bg-purple-600'
-  }
-
   // Handle adding new practice area
   const handleAddPracticeArea = () => {
     const name = prompt('Enter practice area name:')
@@ -665,271 +639,45 @@ export default function Home() {
                   </div>
 
                   {/* Task Cards */}
+                  {/* Task Cards */}
                   <div className='space-y-4'>
                     {activeArea.taskCards.map((card: TaskCard) => (
-                      <div
+                      <TaskCardComponent
                         key={card.id}
-                        className='bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 ease-in-out hover:border-purple-200 dark:hover:border-purple-700'
-                      >
-                        {/* Task Card Header */}
-                        <div
-                          className={`p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between transition-all duration-200 ease-in-out ${
-                            card.isExpanded
-                              ? 'border-b border-gray-200 dark:border-gray-700 rounded-t-lg'
-                              : 'rounded-lg'
-                          }`}
-                          onClick={() =>
-                            toggleTaskCard(
-                              activeArea.id,
-                              card.id,
-                              activeAreaType as 'practice' | 'project'
-                            )
-                          }
-                        >
-                          <div className='flex items-center space-x-3'>
-                            {/* color dot */}
-                            <span
-                              className={`w-3 h-3 ${getColorClass(
-                                card.color
-                              )} rounded-full transition-transform duration-200 ${
-                                card.isExpanded ? 'scale-110' : 'scale-100'
-                              }`}
-                            ></span>
-
-                            {/* Inline editing or display name for task card */}
-                            {editingAreaId === card.id ? (
-                              <input
-                                type='text'
-                                value={editingName}
-                                onChange={(e) => setEditingName(e.target.value)}
-                                onBlur={() =>
-                                  handleFinishRename(card.id, 'task-card')
-                                }
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') {
-                                    handleFinishRename(card.id, 'task-card')
-                                  } else if (e.key === 'Escape') {
-                                    handleCancelRename()
-                                  }
-                                }}
-                                className='flex-1 bg-transparent border-b border-purple-500 outline-none text-gray-900 dark:text-white text-lg font-medium'
-                                autoFocus
-                                onFocus={(e) => e.target.select()}
-                              />
-                            ) : (
-                              <ScrollableText>
-                                <h3 className='text-lg font-medium text-gray-900 dark:text-white transition-colors duration-200'>
-                                  {card.name}
-                                </h3>
-                              </ScrollableText>
-                            )}
-                          </div>
-                          <div className='flex'>
-                            {/* context menu button */}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                openColorPicker(
-                                  e,
-                                  card.id,
-                                  'task-card',
-                                  card.name,
-                                  card.color,
-                                  activeArea.id,
-                                  activeAreaType as 'practice' | 'project'
-                                )
-                              }}
-                              className='group mr-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors flex-shrink-0'
-                              title='More options'
-                            >
-                              <MoreVertical className='w-4 h-4 group-hover:scale-125 transition-all duration-300' />
-                            </button>
-
-                            {/* chevron */}
-                            <button
-                              className={`group text-gray-500 dark:text-gray-400  hover:text-gray-900 dark:hover:text-white  transition-transform duration-300 ease-in-out ${
-                                card.isExpanded ? 'rotate-0' : 'rotate-0'
-                              }`}
-                            >
-                              {card.isExpanded ? (
-                                <ChevronDown className='w-5 h-5 group-hover:scale-125 transition-all duration-300' />
-                              ) : (
-                                <ChevronRight className='w-5 h-5 group-hover:scale-125 transition-all duration-300' />
-                              )}
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Card content with smooth expand/collapse */}
-                        <div
-                          className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                            card.isExpanded
-                              ? 'max-h-screen opacity-100'
-                              : 'max-h-0 opacity-0'
-                          }`}
-                        >
-                          <div className='p-4 space-y-3'>
-                            {/* Todos */}
-                            {card.todos.length === 0 ? (
-                              <div className='text-gray-500 dark:text-gray-400 italic text-sm py-2'>
-                                No tasks yet...
-                              </div>
-                            ) : (
-                              card.todos.map((todo: Todo) => (
-                                <div
-                                  key={todo.id}
-                                  className={`flex items-center space-x-3 transition-all duration-300 ease-in-out rounded-lg p-2 -mx-2 ${
-                                    isTimerActiveForTodo(todo.id)
-                                      ? 'bg-purple-50 dark:bg-purple-900/10 ring-2 ring-purple-200 dark:ring-purple-800 shadow-sm'
-                                      : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                                  }`}
-                                >
-                                  <input
-                                    type='checkbox'
-                                    checked={todo.completed}
-                                    onChange={() => {
-                                      // If this todo has an active timer and is being completed, stop the timer
-                                      if (
-                                        !todo.completed &&
-                                        isTimerActiveForTodo(todo.id)
-                                      ) {
-                                        handleStopTimer()
-                                      }
-                                      toggleTodo(
-                                        activeArea.id,
-                                        card.id,
-                                        todo.id,
-                                        activeAreaType as 'practice' | 'project'
-                                      )
-                                    }}
-                                    className='w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500'
-                                  />
-
-                                  {/* Todo content with timer */}
-                                  <div className='flex-1 flex items-center justify-between min-w-0'>
-                                    <ScrollableText className='flex-shrink-0 cursor-pointer'>
-                                      <span
-                                        className={`transition-all duration-300 ${
-                                          todo.completed
-                                            ? 'text-gray-500 dark:text-gray-400 line-through'
-                                            : 'text-gray-900 dark:text-white'
-                                        }`}
-                                      >
-                                        {todo.name}
-                                      </span>
-                                    </ScrollableText>
-
-                                    {/* Timer display and controls */}
-                                    <div className='flex items-center space-x-2 sm:space-x-3 flex-shrink-0'>
-                                      {/* Timer display - show time if this todo has active timer, grayed out if completed */}
-                                      <span
-                                        className={`font-mono text-xs sm:text-sm transition-all duration-300 ${
-                                          todo.completed
-                                            ? 'text-gray-400 dark:text-gray-500'
-                                            : isTimerActiveForTodo(todo.id)
-                                            ? 'text-purple-600 dark:text-purple-400 font-semibold animate-pulse'
-                                            : 'text-gray-600 dark:text-gray-400'
-                                        }`}
-                                      >
-                                        {formatTime(
-                                          getDisplayTimeForTodo(todo.id)
-                                        )}
-                                      </span>
-
-                                      {/* Timer control - single icon toggle, disabled if completed */}
-                                      <button
-                                        onClick={() => {
-                                          if (todo.completed) return // Don't allow timer actions on completed todos
-
-                                          if (isTimerActiveForTodo(todo.id)) {
-                                            handleStopTimer()
-                                          } else {
-                                            handleStartTimer(
-                                              activeArea.id,
-                                              activeArea.name,
-                                              activeAreaType as
-                                                | 'practice'
-                                                | 'project',
-                                              card.id,
-                                              card.name,
-                                              todo.id,
-                                              todo.name
-                                            )
-                                          }
-                                        }}
-                                        disabled={todo.completed}
-                                        className={`p-2 rounded-lg transition-all duration-200 transform touch-manipulation ${
-                                          todo.completed
-                                            ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed scale-95 opacity-50'
-                                            : isTimerActiveForTodo(todo.id)
-                                            ? 'text-red-600 bg-red-300/30 dark:bg-red-900/20 hover:bg-red-600/20 dark:hover:bg-red-900/40 cursor-pointer hover:scale-105 active:scale-95 shadow-sm'
-                                            : 'text-green-600 hover:bg-green-600/20 dark:hover:bg-green-900/60 cursor-pointer hover:scale-105 active:scale-95 shadow-sm'
-                                        }`}
-                                        title={
-                                          todo.completed
-                                            ? 'Timer disabled for completed tasks'
-                                            : isTimerActiveForTodo(todo.id)
-                                            ? 'Stop timer'
-                                            : 'Start timer'
-                                        }
-                                      >
-                                        <div
-                                          className={`transition-transform duration-200 ${
-                                            isTimerActiveForTodo(todo.id)
-                                              ? 'animate-pulse'
-                                              : ''
-                                          }`}
-                                        >
-                                          {isTimerActiveForTodo(todo.id) ? (
-                                            <Square className='w-3 h-3 sm:w-4 sm:h-4' />
-                                          ) : (
-                                            <Play className='w-4 h-4' />
-                                          )}
-                                        </div>
-                                      </button>
-                                    </div>
-                                  </div>
-                                </div>
-                              ))
-                            )}
-
-                            {/* Add new todo */}
-                            <div className='flex items-center space-x-2 mt-4 pt-3 border-t border-gray-200 dark:border-gray-700'>
-                              <input
-                                type='text'
-                                placeholder='Add new task...'
-                                className='flex-1 p-2 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent'
-                                onKeyPress={(e) => {
-                                  if (e.key === 'Enter') {
-                                    const input = e.target as HTMLInputElement
-                                    handleAddTodo(
-                                      activeArea.id,
-                                      card.id,
-                                      input.value
-                                    )
-                                    input.value = ''
-                                  }
-                                }}
-                              />
-                              <button
-                                onClick={(e) => {
-                                  const input = (e.target as HTMLElement)
-                                    .previousElementSibling as HTMLInputElement
-                                  handleAddTodo(
-                                    activeArea.id,
-                                    card.id,
-                                    input.value
-                                  )
-                                  input.value = ''
-                                }}
-                                className='bg-primary hover:bg-primary-hover text-white px-3 py-2 rounded text-sm transition-colors'
-                              >
-                                Add
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                        card={card}
+                        areaId={activeArea.id}
+                        areaName={activeArea.name}
+                        areaType={activeAreaType as AreaType}
+                        isTimerActiveForTodo={isTimerActiveForTodo}
+                        formatTime={formatTime}
+                        getDisplayTimeForTodo={getDisplayTimeForTodo}
+                        onToggleCard={() =>
+                          toggleTaskCard(
+                            activeArea.id,
+                            card.id,
+                            activeAreaType as 'practice' | 'project'
+                          )
+                        }
+                        onAddTodo={(name) =>
+                          handleAddTodo(activeArea.id, card.id, name)
+                        }
+                        onToggleTodo={(todoId) =>
+                          toggleTodo(
+                            activeArea.id,
+                            card.id,
+                            todoId,
+                            activeAreaType as 'practice' | 'project'
+                          )
+                        }
+                        onStartTimer={handleStartTimer}
+                        onStopTimer={handleStopTimer}
+                        onOpenContextMenu={openColorPicker}
+                        editingAreaId={editingAreaId}
+                        editingName={editingName}
+                        setEditingName={setEditingName}
+                        onFinishRename={handleFinishRename}
+                        onCancelRename={handleCancelRename}
+                      />
                     ))}
                   </div>
                 </>
