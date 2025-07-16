@@ -123,7 +123,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
             Thanks for reaching out!
           </h3>
           <p className='text-gray-600 dark:text-gray-400'>
-            I'll get back to you as soon as possible at{' '}
+            I&apos;ll get back to you as soon as possible at{' '}
             <strong>{formData.email}</strong>
           </p>
         </div>
@@ -179,7 +179,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
         <div className='flex items-center space-x-2 text-gray-600 dark:text-gray-400'>
           <Mail className='w-4 h-4' />
           <span className='text-sm'>
-            Send me a message and I'll get back to you soon!
+            Send me a message and I&apos;ll get back to you soon!
           </span>
         </div>
       </div>
