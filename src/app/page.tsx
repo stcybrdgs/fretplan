@@ -15,6 +15,7 @@ import ConfirmationModal from '@/app/components/ConfirmationModal'
 import { ItemContextMenu } from '@/app/components/ItemContextMenu'
 import TaskCardComponent from '@/app/components/TaskCard'
 import { getColorClass } from '@/utils/colorUtils'
+import Sidebar from '@/app/components/Sidebar'
 // import DigitalClock from '@/app/components/DigitalClock' // test-only clock component
 
 export default function Home() {
@@ -423,191 +424,25 @@ export default function Home() {
 
       <div className='flex pt-16'>
         {/* Sidebar */}
-        <aside
-          className={`w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 h-screen fixed left-0 transform transition-transform duration-300 ease-in-out z-40 ${
-            isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          } md:translate-x-0`}
-        >
-          <div className='p-4 space-y-2'>
-            {/* Practice Areas Section */}
-            <div className='text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-3 flex items-center justify-between'>
-              <span>Practice Areas</span>
-              <button
-                onClick={handleAddPracticeArea}
-                className='p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors'
-              >
-                <Plus className='w-4 h-4' />
-              </button>
-            </div>
-
-            {/* Dynamic Practice Areas */}
-            {practiceAreas.map((area: PracticeArea) => (
-              <div
-                key={area.id}
-                className='flex items-center justify-between w-full'
-              >
-                <div
-                  onClick={() => setActivePracticeArea(area.id)}
-                  className={`flex items-center space-x-3 flex-1 min-w-0 text-left p-2 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-                    activePracticeAreaId === area.id
-                      ? 'bg-purple-500/20 hover:bg-purple-500/20 dark:bg-purple-500/30 dark:hover:bg-purple-500/30 text-gray-900 dark:text-white'
-                      : 'text-gray-900 dark:text-white'
-                  }`}
-                >
-                  <span
-                    className={`w-2 h-2 ${getColorClass(
-                      area.color
-                    )} rounded-full flex-shrink-0`}
-                  ></span>
-                  {/* Inline editing or display name */}
-                  {editingAreaId === area.id ? (
-                    <input
-                      type='text'
-                      value={editingName}
-                      onChange={(e) => setEditingName(e.target.value)}
-                      onBlur={() => handleFinishRename(area.id, 'practice')}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          handleFinishRename(area.id, 'practice')
-                        } else if (e.key === 'Escape') {
-                          handleCancelRename()
-                        }
-                      }}
-                      className='flex-1 bg-transparent border-b border-purple-500 outline-none text-gray-900 dark:text-white'
-                      autoFocus
-                      onFocus={(e) => e.target.select()}
-                    />
-                  ) : (
-                    <ScrollableText className='flex-1'>
-                      <span>{area.name}</span>
-                    </ScrollableText>
-                  )}
-                  {/* context menu button */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      openColorPicker(
-                        e,
-                        area.id,
-                        'practice-area',
-                        area.name,
-                        area.color
-                      )
-                    }}
-                    className='group text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors flex-shrink-0'
-                    title='More options'
-                  >
-                    <MoreVertical className='w-4 h-4 group-hover:scale-125 transition-all duration-300' />
-                  </button>
-                </div>
-              </div>
-            ))}
-
-            {/* Projects Section */}
-            <div className='pt-4 mt-4 border-t border-gray-200 dark:border-gray-700'>
-              <div className='text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-3 flex items-center justify-between'>
-                <span>Projects</span>
-                <button
-                  onClick={handleAddProject}
-                  className='p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors'
-                >
-                  <Plus className='w-4 h-4' />
-                </button>
-              </div>
-
-              {/* Dynamic Projects */}
-              {projects.map((project: ProjectArea) => (
-                <div
-                  key={project.id}
-                  className='flex items-center justify-between w-full'
-                >
-                  <div
-                    onClick={() => setActiveProject(project.id)}
-                    className={`flex items-center space-x-3 flex-1 min-w-0 text-left p-2 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-                      activeProjectId === project.id
-                        ? 'bg-purple-500/20 hover:bg-purple-500/20 dark:bg-purple-500/30 dark:hover:bg-purple-500/30 text-gray-900 dark:text-white'
-                        : 'text-gray-900 dark:text-white'
-                    }`}
-                  >
-                    <span
-                      className={`w-2 h-2 ${getColorClass(
-                        project.color
-                      )} rounded-full flex-shrink-0`}
-                    ></span>
-                    {/* Inline editing or display name */}
-                    {editingAreaId === project.id ? (
-                      <input
-                        type='text'
-                        value={editingName}
-                        onChange={(e) => setEditingName(e.target.value)}
-                        onBlur={() => handleFinishRename(project.id, 'project')}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            handleFinishRename(project.id, 'project')
-                          } else if (e.key === 'Escape') {
-                            handleCancelRename()
-                          }
-                        }}
-                        className='flex-1 bg-transparent border-b border-purple-500 outline-none text-gray-900 dark:text-white'
-                        autoFocus
-                        onFocus={(e) => e.target.select()}
-                      />
-                    ) : (
-                      <ScrollableText className='flex-1'>
-                        <span>{project.name}</span>
-                      </ScrollableText>
-                    )}
-                    {/* context menu button */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        openColorPicker(
-                          e,
-                          project.id,
-                          'project',
-                          project.name,
-                          project.color
-                        )
-                      }}
-                      className='group text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors'
-                      title='More options'
-                    >
-                      <MoreVertical className='w-4 h-4 group-hover:scale-125 transition-all duration-300' />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Analyze Section */}
-            <div className='pt-4 mt-4 border-t border-gray-200 dark:border-gray-700'>
-              <div className='text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-3'>
-                Analyze
-              </div>
-              <button
-                onClick={() => setActiveView('dashboard')}
-                className='flex items-center space-x-3 w-full text-left text-gray-900 dark:text-white p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 bg-purple-50 dark:bg-purple-900/20 transition-colors'
-              >
-                <span className='w-2 h-2 bg-purple-600 rounded-full'></span>
-                <span>Dashboard</span>
-              </button>
-            </div>
-
-            {/* Manage Section */}
-            <div className='pt-4 mt-4 border-t border-gray-200 dark:border-gray-700'>
-              <div className='text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-3'>
-                Manage
-              </div>
-              <button
-                onClick={() => setActiveView('tags')}
-                className='flex items-center space-x-3 w-full text-left text-gray-900 dark:text-white p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 bg-purple-50 dark:bg-purple-900/20 transition-colors'
-              >
-                <span className='w-2 h-2 bg-purple-600 rounded-full'></span>
-                <span>Tags</span>
-              </button>
-            </div>
-          </div>
-        </aside>
+        <Sidebar
+          isSidebarOpen={isSidebarOpen}
+          practiceAreas={practiceAreas}
+          projects={projects}
+          activePracticeAreaId={activePracticeAreaId}
+          activeProjectId={activeProjectId}
+          activeView={activeView}
+          editingAreaId={editingAreaId}
+          editingName={editingName}
+          setEditingName={setEditingName}
+          onSetActivePracticeArea={setActivePracticeArea}
+          onSetActiveProject={setActiveProject}
+          onSetActiveView={setActiveView}
+          onAddPracticeArea={handleAddPracticeArea}
+          onAddProject={handleAddProject}
+          onOpenContextMenu={openColorPicker}
+          onFinishRename={handleFinishRename}
+          onCancelRename={handleCancelRename}
+        />
 
         {/* Main Content */}
         <main className='flex-1 md:ml-64 p-6 bg-gray-50 dark:bg-gray-900 min-h-screen'>
