@@ -14,6 +14,10 @@ import ConfirmationModal from '@/app/components/ConfirmationModal'
 import { ItemContextMenu } from '@/app/components/ItemContextMenu'
 import TaskCardComponent from '@/app/components/TaskCard'
 import Sidebar from '@/app/components/Sidebar'
+import { CreatePracticeAreaModal } from '@/app/components/modals/CreatePracticeAreaModal'
+import { CreateProjectModal } from '@/app/components/modals/CreateProjectModal'
+import { CreateTaskCardModal } from '@/app/components/modals/CreateTaskCardModal'
+
 // import DigitalClock from '@/app/components/DigitalClock' // test-only clock component
 
 export default function Home() {
@@ -89,6 +93,11 @@ export default function Home() {
   const [selectedSidebarItemId, setSelectedSidebarItemId] = useState<
     string | null
   >(null)
+
+  const [showCreatePracticeAreaModal, setShowCreatePracticeAreaModal] =
+    useState(false)
+  const [showCreateProjectModal, setShowCreateProjectModal] = useState(false)
+  const [showCreateTaskCardModal, setShowCreateTaskCardModal] = useState(false)
 
   // Apply theme on component mount (for initial load)
   useEffect(() => {
@@ -356,28 +365,17 @@ export default function Home() {
 
   // Handle adding new practice area
   const handleAddPracticeArea = () => {
-    const name = prompt('Enter practice area name:')
-    if (name) {
-      addPracticeArea(name, 'gray')
-    }
+    setShowCreatePracticeAreaModal(true)
   }
 
   // Handle adding new project
   const handleAddProject = () => {
-    const name = prompt('Enter project name:')
-    if (name) {
-      addProject(name, 'gray')
-    }
+    setShowCreateProjectModal(true)
   }
 
   // Handle adding new task card
   const handleAddTaskCard = () => {
-    const currentAreaId = activePracticeAreaId || activeProjectId
-    if (!currentAreaId) return
-    const name = prompt('Enter task card name:')
-    if (name) {
-      addTaskCard(currentAreaId, name, activeAreaType as 'practice' | 'project')
-    }
+    setShowCreateTaskCardModal(true)
   }
 
   // Handle adding new todo
@@ -390,6 +388,34 @@ export default function Home() {
         activeAreaType as 'practice' | 'project'
       )
     }
+  }
+
+  // Handle modal save actions
+  const handleSavePracticeArea = (
+    name: string,
+    color: PracticeArea['color']
+  ) => {
+    addPracticeArea(name, color)
+    setShowCreatePracticeAreaModal(false)
+  }
+
+  const handleSaveProject = (name: string, color: ProjectArea['color']) => {
+    addProject(name, color)
+    setShowCreateProjectModal(false)
+  }
+
+  const handleSaveTaskCard = (name: string, color: TaskCard['color']) => {
+    const currentAreaId = activePracticeAreaId || activeProjectId
+    if (!currentAreaId) return
+
+    // Update the store to accept color parameter
+    addTaskCard(
+      currentAreaId,
+      name,
+      activeAreaType as 'practice' | 'project',
+      color
+    )
+    setShowCreateTaskCardModal(false)
   }
 
   return (
@@ -439,7 +465,6 @@ export default function Home() {
           </div>
         </div>
       </nav>
-
       <div className='flex pt-16'>
         {/* Sidebar */}
         <Sidebar
@@ -563,7 +588,6 @@ export default function Home() {
           </div>
         </main>
       </div>
-
       {/* Mobile Overlay */}
       {isSidebarOpen && (
         <div
@@ -571,7 +595,6 @@ export default function Home() {
           onClick={toggleSidebar}
         ></div>
       )}
-
       {/* Context Menu (replaces old ColorPicker) */}
       <ItemContextMenu
         isOpen={colorPickerState.isOpen}
@@ -582,7 +605,6 @@ export default function Home() {
         onDelete={handleDelete}
         onClose={closeColorPicker}
       />
-
       {/* Confirmation Modal */}
       <ConfirmationModal
         isOpen={confirmationModal.isOpen}
@@ -595,6 +617,28 @@ export default function Home() {
         onCancel={() =>
           setConfirmationModal({ ...confirmationModal, isOpen: false })
         }
+      />
+
+      {/* Create Practice Area Modal */}
+      <CreatePracticeAreaModal
+        isOpen={showCreatePracticeAreaModal}
+        onClose={() => setShowCreatePracticeAreaModal(false)}
+        onSave={handleSavePracticeArea}
+      />
+
+      {/* Create Project Modal */}
+      <CreateProjectModal
+        isOpen={showCreateProjectModal}
+        onClose={() => setShowCreateProjectModal(false)}
+        onSave={handleSaveProject}
+      />
+
+      {/* Create Task Card Modal */}
+      <CreateTaskCardModal
+        isOpen={showCreateTaskCardModal}
+        onClose={() => setShowCreateTaskCardModal(false)}
+        onSave={handleSaveTaskCard}
+        areaType={activeAreaType as 'practice' | 'project'}
       />
     </div>
   )

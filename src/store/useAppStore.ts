@@ -480,7 +480,12 @@ export const useAppStore = create<AppState>()(
             ],
           })),
 
-        addTaskCard: (areaId: string, name: string, areaType: AreaType) =>
+        addTaskCard: (
+          areaId: string,
+          name: string,
+          areaType: AreaType,
+          color: TaskCard['color'] = 'gray'
+        ) =>
           set((state) => {
             const targetArray =
               areaType === 'practice' ? 'practiceAreas' : 'projects'
@@ -495,7 +500,7 @@ export const useAppStore = create<AppState>()(
                           id: generateId(),
                           name,
                           isExpanded: true,
-                          color: 'gray',
+                          color,
                           todos: [],
                           createdAt: new Date(),
                         },

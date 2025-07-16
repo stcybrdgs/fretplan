@@ -49,7 +49,12 @@ export interface AppState {
   // CRUD operations
   addPracticeArea: (name: string, color: PracticeArea['color']) => void
   addProject: (name: string, color: ProjectArea['color']) => void
-  addTaskCard: (areaId: string, name: string, areaType: AreaType) => void
+  addTaskCard: (
+    areaId: string,
+    name: string,
+    areaType: AreaType,
+    color?: TaskCard['color']
+  ) => void
   addTodo: (
     areaId: string,
     taskCardId: string,
