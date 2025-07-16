@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Menu, Sun, Moon, Mail, Plus, MoreVertical } from 'lucide-react'
+import { Menu, Sun, Moon, Mail, Plus } from 'lucide-react'
 import { useAppStore } from '@/store/useAppStore'
 import {
   PracticeArea,
@@ -10,11 +10,9 @@ import {
   ColorPickerState,
   AreaType,
 } from '@/types'
-import ScrollableText from '@/app/components/ScrollableText'
 import ConfirmationModal from '@/app/components/ConfirmationModal'
 import { ItemContextMenu } from '@/app/components/ItemContextMenu'
 import TaskCardComponent from '@/app/components/TaskCard'
-import { getColorClass } from '@/utils/colorUtils'
 import Sidebar from '@/app/components/Sidebar'
 // import DigitalClock from '@/app/components/DigitalClock' // test-only clock component
 
