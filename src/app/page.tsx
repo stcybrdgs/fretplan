@@ -23,7 +23,7 @@ import {
 } from '@/types'
 import ScrollableText from '@/app/components/ScrollableText'
 import ConfirmationModal from '@/app/components/ConfirmationModal'
-import ContextMenu from '@/app/components/ContextMenu'
+import { ItemContextMenu } from '@/app/components/ItemContextMenu'
 // import DigitalClock from '@/app/components/DigitalClock' // test-only clock component
 
 export default function Home() {
@@ -970,7 +970,7 @@ export default function Home() {
       )}
 
       {/* Context Menu (replaces old ColorPicker) */}
-      <ContextMenu
+      <ItemContextMenu
         isOpen={colorPickerState.isOpen}
         position={colorPickerState.position}
         currentColor={colorPickerState.currentColor}
