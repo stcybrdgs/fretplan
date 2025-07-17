@@ -22,10 +22,37 @@ import { useStoreHydration } from '@/store/useAppStore'
 import { getLocalDateString } from '@/utils/dateUtils'
 // import DigitalClock from '@/app/components/DigitalClock' // test-only clock component
 
+const useViewportHeight = () => {
+  const [height, setHeight] = useState('100vh')
+
+  useEffect(() => {
+    const updateHeight = () => {
+      // Get the actual viewport height
+      const vh = window.innerHeight
+      setHeight(`${vh}px`)
+    }
+
+    // Set initial height
+    updateHeight()
+
+    // Update on resize (handles mobile orientation changes and address bar)
+    window.addEventListener('resize', updateHeight)
+    window.addEventListener('orientationchange', updateHeight)
+
+    return () => {
+      window.removeEventListener('resize', updateHeight)
+      window.removeEventListener('orientationchange', updateHeight)
+    }
+  }, [])
+
+  return height
+}
+
 export default function Home() {
-  const storeHydrated = useStoreHydration()
   const { theme, setTheme } = useTheme()
   const [themeMounted, setThemeMounted] = useState(false)
+  const storeHydrated = useStoreHydration()
+  const viewportHeight = useViewportHeight()
   const {
     practiceAreas,
     projects,
@@ -392,7 +419,11 @@ export default function Home() {
   }
 
   return (
-    <div className='bg-gray-50 dark:bg-gray-900 transition-colors duration-300 min-h-screen'>
+    // <div className='bg-gray-50 dark:bg-gray-900 transition-colors duration-300 min-h-screen'>
+    <div
+      className='bg-gray-50 dark:bg-gray-900 transition-colors duration-300 flex flex-col'
+      style={{ height: viewportHeight }}
+    >
       {/* Top Navigation */}
       <nav className='bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 fixed w-full top-0 z-50'>
         <div className='flex items-center justify-between max-w-7xl mx-auto'>
@@ -441,7 +472,10 @@ export default function Home() {
           </div>
         </div>
       </nav>
-      <div className='flex pt-16'>
+      {/* <div className='flex pt-16'> */}
+      <div className='flex flex-1' style={{ paddingTop: '4rem' }}>
+        {' '}
+        {/* rem: 4rem = 64px for nav height */}
         {/* Sidebar */}
         <Sidebar
           isSidebarOpen={isSidebarOpen}
@@ -463,103 +497,110 @@ export default function Home() {
           onFinishRename={handleFinishRename}
           onCancelRename={handleCancelRename}
         />
-
         {/* Main Content */}
-        <main className='flex-1 md:ml-64 p-6 bg-gray-50 dark:bg-gray-900 min-h-screen'>
-          <div className='max-w-4xl mx-auto'>
-            {(activeView === 'practice-area' ||
-              activeView === 'project-area') &&
-              activeArea && (
-                <>
-                  {/* Page Header */}
-                  <div className='mb-6'>
-                    <h2 className='text-2xl font-bold text-gray-900 dark:text-white mb-2'>
-                      {activeArea.name}
-                    </h2>
-                  </div>
+        <main className='flex-1 md:ml-64'>
+          <div
+            className='overflow-y-auto p-6 bg-gray-50 dark:bg-gray-900'
+            style={{
+              height: `calc(${viewportHeight} - 4rem)`, // Subtract nav height
+              maxHeight: `calc(${viewportHeight} - 4rem)`,
+            }}
+          >
+            <div className='max-w-4xl mx-auto'>
+              {(activeView === 'practice-area' ||
+                activeView === 'project-area') &&
+                activeArea && (
+                  <>
+                    {/* Page Header */}
+                    <div className='mb-6'>
+                      <h2 className='text-2xl font-bold text-gray-900 dark:text-white mb-2'>
+                        {activeArea.name}
+                      </h2>
+                    </div>
 
-                  {/* Add New Card Button */}
-                  <div className='mb-6'>
-                    <button
-                      onClick={handleAddTaskCard}
-                      className='bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors'
-                    >
-                      <Plus className='w-4 h-4' />
-                      <span>
-                        {activeView === 'practice-area'
-                          ? 'Add Practice Card'
-                          : 'Add Project Card'}
-                      </span>
-                    </button>
-                  </div>
+                    {/* Add New Card Button */}
+                    <div className='mb-6'>
+                      <button
+                        onClick={handleAddTaskCard}
+                        className='bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors'
+                      >
+                        <Plus className='w-4 h-4' />
+                        <span>
+                          {activeView === 'practice-area'
+                            ? 'Add Practice Card'
+                            : 'Add Project Card'}
+                        </span>
+                      </button>
+                    </div>
 
-                  {/* Task Cards */}
-                  <div className='space-y-4'>
-                    {activeArea.taskCards.map((card: TaskCard) => (
-                      <TaskCardComponent
-                        key={card.id}
-                        card={card}
-                        areaId={activeArea.id}
-                        areaName={activeArea.name}
-                        areaType={activeAreaType as AreaType}
-                        isSelected={selectedTaskCardId === card.id}
-                        isTimerActiveForTodo={isTimerActiveForTodo}
-                        formatTime={formatTime}
-                        getDisplayTimeForTodo={getDisplayTimeForTodo}
-                        onToggleCard={() =>
-                          toggleTaskCard(
-                            activeArea.id,
-                            card.id,
-                            activeAreaType as 'practice' | 'project'
-                          )
-                        }
-                        onAddTodo={(name) =>
-                          handleAddTodo(activeArea.id, card.id, name)
-                        }
-                        onToggleTodo={(todoId) =>
-                          toggleTodo(
-                            activeArea.id,
-                            card.id,
-                            todoId,
-                            activeAreaType as 'practice' | 'project'
-                          )
-                        }
-                        onStartTimer={handleStartTimer}
-                        onStopTimer={handleStopTimer}
-                        onOpenContextMenu={openColorPicker}
-                        editingAreaId={editingAreaId}
-                        editingName={editingName}
-                        setEditingName={setEditingName}
-                        onFinishRename={handleFinishRename}
-                        onCancelRename={handleCancelRename}
-                      />
-                    ))}
-                  </div>
-                </>
+                    {/* Task Cards */}
+                    <div className='space-y-4 pb-8'>
+                      {activeArea.taskCards.map((card: TaskCard) => (
+                        <TaskCardComponent
+                          key={card.id}
+                          card={card}
+                          areaId={activeArea.id}
+                          areaName={activeArea.name}
+                          areaType={activeAreaType as AreaType}
+                          isSelected={selectedTaskCardId === card.id}
+                          isTimerActiveForTodo={isTimerActiveForTodo}
+                          formatTime={formatTime}
+                          getDisplayTimeForTodo={getDisplayTimeForTodo}
+                          onToggleCard={() =>
+                            toggleTaskCard(
+                              activeArea.id,
+                              card.id,
+                              activeAreaType as 'practice' | 'project'
+                            )
+                          }
+                          onAddTodo={(name) =>
+                            handleAddTodo(activeArea.id, card.id, name)
+                          }
+                          onToggleTodo={(todoId) =>
+                            toggleTodo(
+                              activeArea.id,
+                              card.id,
+                              todoId,
+                              activeAreaType as 'practice' | 'project'
+                            )
+                          }
+                          onStartTimer={handleStartTimer}
+                          onStopTimer={handleStopTimer}
+                          onOpenContextMenu={openColorPicker}
+                          editingAreaId={editingAreaId}
+                          editingName={editingName}
+                          setEditingName={setEditingName}
+                          onFinishRename={handleFinishRename}
+                          onCancelRename={handleCancelRename}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
+
+              {/* Other views */}
+              {activeView === 'dashboard' && (
+                <div className='text-center py-12 pb-8'>
+                  <h2 className='text-2xl font-bold text-gray-900 dark:text-white mb-4'>
+                    Dashboard
+                  </h2>
+                  <p className='text-gray-600 dark:text-gray-400'>
+                    Coming soon...
+                  </p>
+                </div>
               )}
 
-            {/* Other views */}
-            {activeView === 'dashboard' && (
-              <div className='text-center py-12'>
-                <h2 className='text-2xl font-bold text-gray-900 dark:text-white mb-4'>
-                  Dashboard
-                </h2>
-                <p className='text-gray-600 dark:text-gray-400'>
-                  Coming soon...
-                </p>
-              </div>
-            )}
-
-            {activeView === 'tags' && (
-              <div className='text-center py-12'>
-                <h2 className='text-2xl font-bold text-gray-900 dark:text-white mb-4'>
-                  Tags
-                </h2>
-                <p className='text-gray-600 dark:text-gray-400'>
-                  Coming soon...
-                </p>
-              </div>
-            )}
+              {activeView === 'tags' && (
+                <div className='text-center py-12 pb-8'>
+                  <h2 className='text-2xl font-bold text-gray-900 dark:text-white mb-4'>
+                    Tags
+                  </h2>
+                  <p className='text-gray-600 dark:text-gray-400'>
+                    Coming soon...
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </main>
       </div>
