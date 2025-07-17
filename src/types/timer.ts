@@ -10,14 +10,14 @@ export interface ActiveTimer {
   taskCardName: string
   todoId: string
   todoName: string
-  startTime: Date
+  startTime: Date // UTC timestamp when timer started
   status: TimerStatus
 }
 
 // Daily timer record - one per todo per day with accumulated time
 export interface TimerDayRecord {
   id: string
-  createdAt: Date
+  createdAtUTC: Date // UTC timestamp for data consistency across timezones
   areaId: string
   areaName: string
   areaType: 'practice' | 'project'

@@ -19,6 +19,7 @@ import { CreateProjectModal } from '@/app/components/modals/CreateProjectModal'
 import { CreateTaskCardModal } from '@/app/components/modals/CreateTaskCardModal'
 import { ContactModal } from '@/app/components/modals/ContactModal'
 import { useStoreHydration } from '@/store/useAppStore'
+import { getLocalDateString } from '@/utils/dateUtils'
 // import DigitalClock from '@/app/components/DigitalClock' // test-only clock component
 
 export default function Home() {
@@ -123,12 +124,6 @@ export default function Home() {
     areaId?: string,
     areaType?: 'practice' | 'project'
   ) => {
-    console.log('🎯 openColorPicker called:', {
-      targetId,
-      targetType,
-      targetName,
-      currentColor,
-    })
     e.preventDefault() // Prevent browser context menu
     e.stopPropagation()
 
@@ -154,28 +149,23 @@ export default function Home() {
   }
 
   const closeColorPicker = () => {
-    console.log('🔴 closeColorPicker called')
     setColorPickerState((prev) => ({ ...prev, isOpen: false }))
     setSelectedTaskCardId(null) // Clear selected state when menu closes
     setSelectedSidebarItemId(null) // Clear both selections
   }
 
   const handleColorSelect = (newColor: string) => {
-    console.log('🎨 handleColorSelect called:', { newColor, colorPickerState })
     const { targetId, targetType, areaId, areaType } = colorPickerState
 
     switch (targetType) {
       case 'practice-area':
-        console.log('🔄 Updating practice area color')
         updatePracticeAreaColor(targetId, newColor as PracticeArea['color'])
         break
       case 'project':
-        console.log('🔄 Updating project color')
         updateProjectColor(targetId, newColor as ProjectArea['color'])
         break
       case 'task-card':
         if (areaId && areaType) {
-          console.log('🔄 Updating task card color')
           updateTaskCardColor(
             areaId,
             targetId,
@@ -186,20 +176,11 @@ export default function Home() {
         break
     }
 
-    console.log('Color selected:', {
-      targetId,
-      targetType,
-      newColor,
-      areaId,
-      areaType,
-    })
-
     closeColorPicker()
   }
 
   // Handlers for rename operations
   const handleStartRename = () => {
-    console.log('✏️ handleStartRename called:', colorPickerState)
     setEditingAreaId(colorPickerState.targetId)
     setEditingName(colorPickerState.targetName)
     closeColorPicker()
@@ -209,11 +190,6 @@ export default function Home() {
     id: string,
     itemType: 'practice' | 'project' | 'task-card'
   ) => {
-    console.log('✅ handleFinishRename called:', {
-      id,
-      itemType,
-      editingName,
-    })
     if (
       editingName.trim() &&
       editingName.trim() !== colorPickerState.targetName
@@ -235,49 +211,41 @@ export default function Home() {
   }
 
   const handleCancelRename = () => {
-    console.log('❌ handleCancelRename called')
     setEditingAreaId(null)
     setEditingName('')
   }
 
   // Handlers for delete operations
   const handleDelete = () => {
-    console.log('🗑️ handleDelete called:', colorPickerState)
     const { targetType, targetName, targetId, areaId, areaType } =
       colorPickerState
 
     if (targetType === 'practice-area') {
-      console.log('🚨 Setting up practice area delete confirmation')
       setConfirmationModal({
         isOpen: true,
         title: 'Delete Practice Area',
         message: `Are you sure you want to delete "${targetName}"? This will permanently remove all task cards and todos within this practice area.`,
         onConfirm: () => {
-          console.log('💥 Deleting practice area:', targetId)
           deletePracticeArea(targetId)
           setConfirmationModal({ ...confirmationModal, isOpen: false })
         },
       })
     } else if (targetType === 'project') {
-      console.log('🚨 Setting up project delete confirmation')
       setConfirmationModal({
         isOpen: true,
         title: 'Delete Project',
         message: `Are you sure you want to delete "${targetName}"? This will permanently remove all task cards and todos within this project.`,
         onConfirm: () => {
-          console.log('💥 Deleting project:', targetId)
           deleteProject(targetId)
           setConfirmationModal({ ...confirmationModal, isOpen: false })
         },
       })
     } else if (targetType === 'task-card') {
-      console.log('🚨 Setting up task card delete confirmation')
       setConfirmationModal({
         isOpen: true,
         title: 'Delete Task Card',
         message: `Are you sure you want to delete "${targetName}"? This will permanently remove all todos and associated timer data within this task card.`,
         onConfirm: () => {
-          console.log('💥 Deleting task card:', targetId)
           if (areaId && areaType) {
             deleteTaskCard(areaId, targetId, areaType)
           }
@@ -310,8 +278,8 @@ export default function Home() {
   }
 
   const getDisplayTimeForTodo = (todoId: string) => {
-    // Get today's accumulated time for this todo
-    const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
+    // Get today's accumulated time for this todo using LOCAL date
+    const today = getLocalDateString(new Date()) // Use local date helper
     const todaysTimers = timers[today] || []
     const todoTimer = todaysTimers.find((timer) => timer.todoId === todoId)
     const todaysTotal = todoTimer ? todoTimer.totalDuration : 0

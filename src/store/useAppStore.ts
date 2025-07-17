@@ -1,6 +1,10 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import {
+  getLocalDateString,
+  getMillisecondsSinceLocalMidnight,
+} from '@/utils/dateUtils'
+import {
   AppState,
   PracticeArea,
   ProjectArea,
@@ -13,19 +17,6 @@ import {
 // Helper function to generate IDs
 const generateId = () => Math.random().toString(36).substr(2, 9)
 
-// Helper function to get today's date string
-const getTodayDateString = () => new Date().toISOString().split('T')[0]
-
-// Helper function to get milliseconds elapsed since midnight
-const getMillisecondsSinceMidnight = (date: Date): number => {
-  const hours = date.getHours()
-  const minutes = date.getMinutes()
-  const seconds = date.getSeconds()
-  const milliseconds = date.getMilliseconds()
-
-  return (hours * 3600 + minutes * 60 + seconds) * 1000 + milliseconds
-}
-
 // Helper function to check if session crossed midnight and split if needed
 const handlePotentialMidnightCrossing = (
   state: AppState,
@@ -34,56 +25,25 @@ const handlePotentialMidnightCrossing = (
 ): AppState => {
   const startTime = new Date(timer.startTime)
   const totalDurationMs = endTime.getTime() - startTime.getTime()
-  const elapsedSinceMidnightMs = getMillisecondsSinceMidnight(endTime)
+  const elapsedSinceLocalMidnightMs = getMillisecondsSinceLocalMidnight(endTime)
 
-  console.log('🕐 Checking for midnight crossing:', {
-    startTime: startTime.toLocaleString(),
-    endTime: endTime.toLocaleString(),
-    totalDurationMs,
-    totalDurationMinutes: Math.round(totalDurationMs / 60000),
-    elapsedSinceMidnightMs,
-    elapsedSinceMidnightMinutes: Math.round(elapsedSinceMidnightMs / 60000),
-    startDay: startTime.toISOString().split('T')[0],
-    endDay: endTime.toISOString().split('T')[0],
-  })
+  // Use local dates for comparison (what the user perceives as "days")
+  const startLocalDate = getLocalDateString(startTime)
+  const endLocalDate = getLocalDateString(endTime)
+  const crossedDayBoundary = startLocalDate !== endLocalDate
 
-  // Check if we're on different days AND if timer duration exceeds elapsed time since midnight
-  const startDay =
-    startTime.getFullYear() +
-    '-' +
-    String(startTime.getMonth() + 1).padStart(2, '0') +
-    '-' +
-    String(startTime.getDate()).padStart(2, '0')
-  const endDay =
-    endTime.getFullYear() +
-    '-' +
-    String(endTime.getMonth() + 1).padStart(2, '0') +
-    '-' +
-    String(endTime.getDate()).padStart(2, '0')
-  const crossedDayBoundary = startDay !== endDay
-
-  if (crossedDayBoundary && totalDurationMs > elapsedSinceMidnightMs) {
-    console.log('🌙 MIDNIGHT CROSSING DETECTED!')
-
+  if (crossedDayBoundary && totalDurationMs > elapsedSinceLocalMidnightMs) {
     // Calculate split durations
-    const afterMidnightMs = elapsedSinceMidnightMs
-    const beforeMidnightMs = totalDurationMs - elapsedSinceMidnightMs
-
-    console.log('⏱️ Split calculation:', {
-      beforeMidnightMs,
-      beforeMidnightMinutes: Math.round(beforeMidnightMs / 60000),
-      afterMidnightMs,
-      afterMidnightMinutes: Math.round(afterMidnightMs / 60000),
-      verification: `${Math.round(beforeMidnightMs / 60000)} + ${Math.round(
-        afterMidnightMs / 60000
-      )} = ${Math.round(
-        (beforeMidnightMs + afterMidnightMs) / 60000
-      )} (should equal ${Math.round(totalDurationMs / 60000)})`,
-    })
+    const afterMidnightMs = elapsedSinceLocalMidnightMs
+    const beforeMidnightMs = totalDurationMs - elapsedSinceLocalMidnightMs
 
     // Validate split makes sense
     if (beforeMidnightMs <= 0 || afterMidnightMs <= 0) {
-      console.error('❌ Invalid split durations, using normal handling')
+      // Keep this log for debugging real issues in production
+      console.error(
+        'Timer midnight crossing calculation error - using fallback'
+      )
+
       return addToTodaysTotal(state, timer.todoId, totalDurationMs, {
         areaId: timer.areaId,
         areaName: timer.areaName,
@@ -94,10 +54,7 @@ const handlePotentialMidnightCrossing = (
       })
     }
 
-    // Add time to first day (before midnight)
-    console.log(
-      `💾 Adding ${Math.round(beforeMidnightMs / 60000)} minutes to ${startDay}`
-    )
+    // Add time to first day (before midnight) - use local date
     let newState = addToTodaysTotal(
       state,
       timer.todoId,
@@ -110,13 +67,10 @@ const handlePotentialMidnightCrossing = (
         taskCardName: timer.taskCardName,
         todoName: timer.todoName,
       },
-      startDay
+      startLocalDate // Use local date string
     )
 
-    // Add time to second day (after midnight)
-    console.log(
-      `💾 Adding ${Math.round(afterMidnightMs / 60000)} minutes to ${endDay}`
-    )
+    // Add time to second day (after midnight) - use local date
     newState = addToTodaysTotal(
       newState,
       timer.todoId,
@@ -129,14 +83,12 @@ const handlePotentialMidnightCrossing = (
         taskCardName: timer.taskCardName,
         todoName: timer.todoName,
       },
-      endDay
+      endLocalDate // Use local date string
     )
 
-    console.log('✅ Midnight crossing handled successfully')
     return newState
   } else {
-    console.log('📝 Normal session - no midnight crossing')
-    // Normal single-day session
+    // Normal single-day session - use local date
     return addToTodaysTotal(state, timer.todoId, totalDurationMs, {
       areaId: timer.areaId,
       areaName: timer.areaName,
@@ -161,9 +113,10 @@ const addToTodaysTotal = (
     taskCardName: string
     todoName: string
   },
-  targetDate?: string // Optional: specify which date to add to
+  targetDate?: string // Optional: specify which local date to add to
 ) => {
-  const dateToUse = targetDate || getTodayDateString()
+  // Use local date if not specified
+  const dateToUse = targetDate || getLocalDateString(new Date())
   const todaysTimers = state.timers[dateToUse] || []
 
   // Find existing timer record for this todo on target date
@@ -190,7 +143,7 @@ const addToTodaysTotal = (
     // Create new record for this todo on target date
     const newTimerRecord = {
       id: generateId(),
-      createdAt: new Date(),
+      createdAtUTC: new Date(), // UTC timestamp for data consistency
       areaId: todoInfo.areaId,
       areaName: todoInfo.areaName,
       areaType: todoInfo.areaType,
@@ -217,32 +170,32 @@ const initialPracticeAreas: PracticeArea[] = [
     id: 'daily-practice',
     name: 'Daily Practice',
     color: 'purple',
-    createdAt: new Date(),
+    createdAtUTC: new Date(),
     taskCards: [
       {
         id: 'card-1',
         name: 'G Dominant Scale Ideas',
         isExpanded: true,
         color: 'green',
-        createdAt: new Date(),
+        createdAtUTC: new Date(),
         todos: [
           {
             id: 'todo-1',
             name: 'Practice Dm - F - Bb - A progression',
             completed: false,
-            createdAt: new Date(),
+            createdAtUTC: new Date(),
           },
           {
             id: 'todo-2',
             name: 'Review tritone substitutions',
             completed: true,
-            createdAt: new Date(),
+            createdAtUTC: new Date(),
           },
           {
             id: 'todo-3',
             name: 'Apply to "Autumn Leaves" in Bb',
             completed: false,
-            createdAt: new Date(),
+            createdAtUTC: new Date(),
           },
         ],
       },
@@ -251,7 +204,7 @@ const initialPracticeAreas: PracticeArea[] = [
         name: 'Autumn Leaves - Bb & G Major',
         isExpanded: false,
         color: 'purple',
-        createdAt: new Date(),
+        createdAtUTC: new Date(),
         todos: [],
       },
     ],
@@ -260,21 +213,21 @@ const initialPracticeAreas: PracticeArea[] = [
     id: 'scales-theory',
     name: 'Scales & Theory',
     color: 'green',
-    createdAt: new Date(),
+    createdAtUTC: new Date(),
     taskCards: [],
   },
   {
     id: 'songs-repertoire',
     name: 'Songs & Repertoire',
     color: 'purple',
-    createdAt: new Date(),
+    createdAtUTC: new Date(),
     taskCards: [],
   },
   {
     id: 'technique',
     name: 'Technique',
     color: 'orange',
-    createdAt: new Date(),
+    createdAtUTC: new Date(),
     taskCards: [],
   },
 ]
@@ -284,7 +237,7 @@ const initialProjects: ProjectArea[] = [
     id: 'original-1',
     name: 'Original #1',
     color: 'purple',
-    createdAt: new Date(),
+    createdAtUTC: new Date(),
     taskCards: [],
   },
 ]
@@ -446,7 +399,7 @@ export const useAppStore = create<AppState>()(
                 name,
                 color,
                 taskCards: [],
-                createdAt: new Date(),
+                createdAtUTC: new Date(),
               },
             ],
           })),
@@ -460,7 +413,7 @@ export const useAppStore = create<AppState>()(
                 name,
                 color,
                 taskCards: [],
-                createdAt: new Date(),
+                createdAtUTC: new Date(),
               },
             ],
           })),
@@ -487,7 +440,7 @@ export const useAppStore = create<AppState>()(
                           isExpanded: true,
                           color,
                           todos: [],
-                          createdAt: new Date(),
+                          createdAtUTC: new Date(),
                         },
                       ],
                     }
@@ -520,7 +473,7 @@ export const useAppStore = create<AppState>()(
                                   id: generateId(),
                                   name,
                                   completed: false,
-                                  createdAt: new Date(),
+                                  createdAtUTC: new Date(),
                                 },
                               ],
                             }

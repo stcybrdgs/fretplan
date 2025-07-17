@@ -16,6 +16,6 @@ export interface ProjectArea {
     | 'pink'
     | 'gray'
   taskCards: TaskCard[]
-  createdAt: Date
+  createdAtUTC: Date
 }
 

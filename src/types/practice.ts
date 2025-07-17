@@ -3,7 +3,7 @@ export interface Todo {
   id: string
   name: string
   completed: boolean
-  createdAt: Date
+  createdAtUTC: Date
 }
 
 export interface TaskCard {
@@ -22,7 +22,7 @@ export interface TaskCard {
     | 'pink'
     | 'gray'
   todos: Todo[]
-  createdAt: Date
+  createdAtUTC: Date
 }
 
 export interface PracticeArea {
@@ -40,6 +40,6 @@ export interface PracticeArea {
     | 'pink'
     | 'gray'
   taskCards: TaskCard[]
-  createdAt: Date
+  createdAtUTC: Date
 }
 
