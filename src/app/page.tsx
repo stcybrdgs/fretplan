@@ -449,9 +449,10 @@ export default function Home() {
   }
 
   // Get active area data (either practice area or project)
-  const activePracticeArea = practiceAreas.find(
-    (area: PracticeArea) => area.id === activePracticeAreaId
-  )
+  const activePracticeArea =
+    practiceAreas.find(
+      (area: PracticeArea) => area.id === activePracticeAreaId
+    ) || practiceAreas[0]
   const activeProject = projects.find(
     (project: ProjectArea) => project.id === activeProjectId
   )

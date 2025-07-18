@@ -13,6 +13,7 @@ import {
   ActiveTimer,
   TimerDayRecord,
 } from '@/types'
+import { initialPracticeAreas, initialProjects } from '@/mocks/initialData'
 
 // Helper function to generate IDs
 const generateId = () => Math.random().toString(36).substr(2, 9)
@@ -164,84 +165,6 @@ const addToTodaysTotal = (
   }
 }
 
-// Initial mock data with updated interface
-const initialPracticeAreas: PracticeArea[] = [
-  {
-    id: 'daily-practice',
-    name: 'Daily Practice',
-    color: 'purple',
-    createdAtUTC: new Date(),
-    taskCards: [
-      {
-        id: 'card-1',
-        name: 'G Dominant Scale Ideas',
-        isExpanded: true,
-        color: 'green',
-        createdAtUTC: new Date(),
-        todos: [
-          {
-            id: 'todo-1',
-            name: 'Practice Dm - F - Bb - A progression',
-            completed: false,
-            createdAtUTC: new Date(),
-          },
-          {
-            id: 'todo-2',
-            name: 'Review tritone substitutions',
-            completed: true,
-            createdAtUTC: new Date(),
-          },
-          {
-            id: 'todo-3',
-            name: 'Apply to "Autumn Leaves" in Bb',
-            completed: false,
-            createdAtUTC: new Date(),
-          },
-        ],
-      },
-      {
-        id: 'card-2',
-        name: 'Autumn Leaves - Bb & G Major',
-        isExpanded: false,
-        color: 'purple',
-        createdAtUTC: new Date(),
-        todos: [],
-      },
-    ],
-  },
-  {
-    id: 'scales-theory',
-    name: 'Scales & Theory',
-    color: 'green',
-    createdAtUTC: new Date(),
-    taskCards: [],
-  },
-  {
-    id: 'songs-repertoire',
-    name: 'Songs & Repertoire',
-    color: 'purple',
-    createdAtUTC: new Date(),
-    taskCards: [],
-  },
-  {
-    id: 'technique',
-    name: 'Technique',
-    color: 'orange',
-    createdAtUTC: new Date(),
-    taskCards: [],
-  },
-]
-
-const initialProjects: ProjectArea[] = [
-  {
-    id: 'original-1',
-    name: 'Original #1',
-    color: 'purple',
-    createdAtUTC: new Date(),
-    taskCards: [],
-  },
-]
-
 export const useAppStore = create<AppState>()(
   persist(
     (set) =>
@@ -251,7 +174,6 @@ export const useAppStore = create<AppState>()(
         activeProjectId: null,
         activeView: 'practice-area',
         isSidebarOpen: false,
-        // isDarkMode: true,
         practiceAreas: initialPracticeAreas,
         projects: initialProjects,
 
