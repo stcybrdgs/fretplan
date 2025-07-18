@@ -170,7 +170,7 @@ export const useAppStore = create<AppState>()(
     (set) =>
       ({
         // Initial state
-        activePracticeAreaId: 'daily-practice',
+        activePracticeAreaId: 'demo-daily-practice',
         activeProjectId: null,
         activeView: 'practice-area',
         isSidebarOpen: false,
