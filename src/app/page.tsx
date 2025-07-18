@@ -21,6 +21,7 @@ import { CreateTaskCardModal } from '@/app/components/modals/CreateTaskCardModal
 import { ContactModal } from '@/app/components/modals/ContactModal'
 import { useStoreHydration } from '@/store/useAppStore'
 import { getLocalDateString } from '@/utils/dateUtils'
+import Image from 'next/image'
 // import DigitalClock from '@/app/components/DigitalClock' // test-only clock component
 
 const useViewportHeight = () => {
@@ -529,11 +530,22 @@ export default function Home() {
             >
               <Menu className='w-4 h-4' />
             </button>
-            <h1 className='text-xl font-semibold text-primary-custom'>
-              FretTime
-            </h1>
-            {/* test-only clock component */}
-            {/* <DigitalClock className='hidden md:block text-gray-600 dark:text-gray-400' /> */}
+
+            {/* Logo and Brand */}
+            <div className='flex items-center space-x-2'>
+              <h1 className='text-xl font-semibold text-primary-custom'>
+                FretTime
+              </h1>
+              {/* Logo - hidden on small screens to save space */}
+              <Image
+                src='/logo.svg'
+                alt='FretTime Logo'
+                width={44}
+                height={44}
+                className='hidden sm:block'
+                priority // Since it's above the fold
+              />
+            </div>
           </div>
 
           {/* Right side controls */}
