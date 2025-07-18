@@ -86,7 +86,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
     >
       {/* Task Card Header */}
       <div
-        className={`p-4 cursor-pointer flex items-center justify-between transition-all duration-200 ease-in-out ${
+        className={`p-4 cursor-pointer flex items-center space-x-3 transition-all duration-200 ease-in-out ${
           card.isExpanded
             ? 'border-b border-gray-200 dark:border-gray-700 rounded-t-lg'
             : 'rounded-lg'
@@ -97,16 +97,16 @@ const TaskCard: React.FC<TaskCardProps> = ({
         }`}
         onClick={onToggleCard}
       >
-        <div className='flex items-center space-x-3'>
-          {/* color dot */}
-          <span
-            className={`w-3 h-3 ${getColorClass(
-              card.color
-            )} rounded-full transition-transform duration-200 ${
-              card.isExpanded ? 'scale-110' : 'scale-100'
-            }`}
-          ></span>
+        {/* color dot */}
+        <span
+          className={`w-3 h-3 ${getColorClass(
+            card.color
+          )} rounded-full transition-transform duration-200 ${
+            card.isExpanded ? 'scale-110' : 'scale-100'
+          }`}
+        ></span>
 
+        <div className='flex-1 flex items-center justify-between min-w-0'>
           {/* Inline editing or display name for task card */}
           {editingAreaId === card.id ? (
             <input
@@ -126,10 +126,10 @@ const TaskCard: React.FC<TaskCardProps> = ({
               onFocus={(e) => e.target.select()}
             />
           ) : (
-            <ScrollableText className='flex-shrink-0 cursor-pointer'>
-              <span className='text-lg font-medium text-gray-900 dark:text-white transition-colors duration-200'>
+            <ScrollableText className='flex-1 cursor-pointer'>
+              <div className='text-lg font-medium text-gray-900 dark:text-white transition-colors duration-200'>
                 {card.name}
-              </span>
+              </div>
             </ScrollableText>
           )}
         </div>
@@ -148,7 +148,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 areaType
               )
             }}
-            className='group mr-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors flex-shrink-0'
+            className='group mr-2 ml-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors flex-shrink-0'
             title='More options'
           >
             <MoreVertical className='w-4 h-4 group-hover:scale-125 transition-all duration-300' />
@@ -228,7 +228,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                       onFocus={(e) => e.target.select()}
                     />
                   ) : (
-                    <ScrollableText className='flex-shrink-0 cursor-pointer'>
+                    <ScrollableText className='flex-1 cursor-pointer'>
                       <span
                         className={`transition-all duration-300 ${
                           todo.completed
@@ -242,7 +242,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                   )}
 
                   {/* Timer display and controls */}
-                  <div className='flex items-center space-x-2 sm:space-x-3 flex-shrink-0'>
+                  <div className='flex items-center ml-6 space-x-2 sm:space-x-3 flex-shrink-0'>
                     {/* Timer display - show time if this todo has active timer, grayed out if completed */}
                     <span
                       className={`font-mono text-xs sm:text-sm transition-all duration-300 ${
