@@ -38,5 +38,14 @@ html {
   .dark .overflow-x-auto::-webkit-scrollbar-thumb {
     background: #6b7280;
   }
+
+  /* override all transition durations */
+  .transition-colors {
+    transition-duration: 100ms !important;
+  }
+
+  /* .transition-all {
+    transition-duration: 100ms !important;
+  } */
 }
 

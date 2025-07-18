@@ -74,7 +74,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         {practiceAreas.map((area: PracticeArea) => (
           <div
             key={area.id}
-            className={`flex items-center justify-between w-full transition-all duration-200 ${
+            className={`flex items-center justify-between w-full transition-all duration-75 ${
               selectedSidebarItemId === area.id
                 ? 'ring-1 ring-purple-500 dark:ring-purple-400 rounded-lg bg-purple-50 dark:bg-purple-900/20'
                 : ''
@@ -155,7 +155,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           {projects.map((project: ProjectArea) => (
             <div
               key={project.id}
-              className={`flex items-center justify-between w-full transition-all duration-200 ${
+              className={`flex items-center justify-between w-full transition-all duration-75 ${
                 selectedSidebarItemId === project.id
                   ? 'ring-1 ring-purple-500 dark:ring-purple-400 rounded-lg bg-purple-50 dark:bg-purple-900/20'
                   : ''

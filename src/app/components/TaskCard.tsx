@@ -127,7 +127,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
             />
           ) : (
             <ScrollableText className='flex-1 cursor-pointer'>
-              <div className='text-lg font-medium text-gray-900 dark:text-white transition-colors duration-200'>
+              <div className='text-lg font-medium text-gray-900 dark:text-white transition-colors duration-75'>
                 {card.name}
               </div>
             </ScrollableText>
@@ -230,7 +230,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                   ) : (
                     <ScrollableText className='flex-1 cursor-pointer'>
                       <span
-                        className={`transition-all duration-300 ${
+                        className={`transition-all duration-75 ${
                           todo.completed
                             ? 'text-gray-500 dark:text-gray-400 line-through'
                             : 'text-gray-900 dark:text-white'
