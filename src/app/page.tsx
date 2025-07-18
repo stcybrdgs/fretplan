@@ -12,6 +12,7 @@ import {
 } from '@/types'
 import ConfirmationModal from '@/app/components/ConfirmationModal'
 import { ItemContextMenu } from '@/app/components/ItemContextMenu'
+import { TodoContextMenu } from '@/app/components/TodoContextMenu'
 import TaskCardComponent from '@/app/components/TaskCard'
 import Sidebar from '@/app/components/Sidebar'
 import { CreatePracticeAreaModal } from '@/app/components/modals/CreatePracticeAreaModal'
@@ -80,6 +81,8 @@ export default function Home() {
     renamePracticeArea,
     renameProject,
     renameTaskCard,
+    renameTodo,
+    deleteTodo,
     deletePracticeArea,
     deleteProject,
     deleteTaskCard,
@@ -114,6 +117,13 @@ export default function Home() {
   const [showCreateProjectModal, setShowCreateProjectModal] = useState(false)
   const [showCreateTaskCardModal, setShowCreateTaskCardModal] = useState(false)
   const [showContactModal, setShowContactModal] = useState(false)
+  const [selectedTodoId, setSelectedTodoId] = useState<string | null>(null)
+  const [todoContextMenu, setTodoContextMenu] = useState({
+    isOpen: false,
+    position: { x: 0, y: 0 },
+    todoId: '',
+    todoName: '',
+  })
 
   useEffect(() => {
     setThemeMounted(true)
@@ -215,7 +225,7 @@ export default function Home() {
 
   const handleFinishRename = (
     id: string,
-    itemType: 'practice' | 'project' | 'task-card'
+    itemType: 'practice' | 'project' | 'task-card' | 'todo'
   ) => {
     if (
       editingName.trim() &&
@@ -230,6 +240,24 @@ export default function Home() {
         const { areaId, areaType } = colorPickerState
         if (areaId && areaType) {
           renameTaskCard(areaId, id, editingName.trim(), areaType)
+        }
+      } else if (itemType === 'todo') {
+        const activeAreaId = activePracticeAreaId || activeProjectId
+        if (activeAreaId) {
+          const activeAreaData = activePracticeArea || activeProject
+          const taskCard = activeAreaData?.taskCards.find((card) =>
+            card.todos.some((todo) => todo.id === id)
+          )
+
+          if (taskCard) {
+            renameTodo(
+              activeAreaId,
+              taskCard.id,
+              id,
+              editingName.trim(),
+              activeAreaType as 'practice' | 'project'
+            )
+          }
         }
       }
     }
@@ -281,6 +309,72 @@ export default function Home() {
       })
     }
     closeColorPicker() // Close the context menu when opening delete modal
+  }
+
+  // Todo context menu handlers
+  const openTodoContextMenu = (
+    e: React.MouseEvent,
+    todoId: string,
+    todoName: string
+  ) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    setSelectedTodoId(todoId)
+    setSelectedTaskCardId(null) // Clear task card selection
+    setSelectedSidebarItemId(null) // Clear sidebar selection
+
+    setTodoContextMenu({
+      isOpen: true,
+      position: { x: e.clientX, y: e.clientY },
+      todoId,
+      todoName,
+    })
+  }
+
+  const closeTodoContextMenu = () => {
+    setTodoContextMenu((prev) => ({ ...prev, isOpen: false }))
+    setSelectedTodoId(null) // Clear selected state when menu closes
+  }
+
+  const handleTodoRename = () => {
+    console.log(
+      'Todo rename clicked:',
+      todoContextMenu.todoId,
+      todoContextMenu.todoName
+    )
+    setEditingAreaId(todoContextMenu.todoId)
+    setEditingName(todoContextMenu.todoName)
+    closeTodoContextMenu()
+  }
+
+  const handleTodoDelete = () => {
+    setConfirmationModal({
+      isOpen: true,
+      title: 'Delete Task',
+      message: `Are you sure you want to delete "${todoContextMenu.todoName}"? This will permanently remove all timer data for this task.`,
+      onConfirm: () => {
+        const activeAreaId = activePracticeAreaId || activeProjectId
+        if (activeAreaId) {
+          // Find the task card containing this todo
+          const activeAreaData = activePracticeArea || activeProject
+          const taskCard = activeAreaData?.taskCards.find((card) =>
+            card.todos.some((todo) => todo.id === todoContextMenu.todoId)
+          )
+
+          if (taskCard) {
+            deleteTodo(
+              activeAreaId,
+              taskCard.id,
+              todoContextMenu.todoId,
+              activeAreaType as 'practice' | 'project'
+            )
+          }
+        }
+        setConfirmationModal({ ...confirmationModal, isOpen: false })
+      },
+    })
+    closeTodoContextMenu()
   }
 
   // Timer helper functions
@@ -543,6 +637,7 @@ export default function Home() {
                           areaName={activeArea.name}
                           areaType={activeAreaType as AreaType}
                           isSelected={selectedTaskCardId === card.id}
+                          selectedTodoId={selectedTodoId}
                           isTimerActiveForTodo={isTimerActiveForTodo}
                           formatTime={formatTime}
                           getDisplayTimeForTodo={getDisplayTimeForTodo}
@@ -567,6 +662,7 @@ export default function Home() {
                           onStartTimer={handleStartTimer}
                           onStopTimer={handleStopTimer}
                           onOpenContextMenu={openColorPicker}
+                          onOpenTodoContextMenu={openTodoContextMenu}
                           editingAreaId={editingAreaId}
                           editingName={editingName}
                           setEditingName={setEditingName}
@@ -622,6 +718,14 @@ export default function Home() {
         onRename={handleStartRename}
         onDelete={handleDelete}
         onClose={closeColorPicker}
+      />
+
+      <TodoContextMenu
+        isOpen={todoContextMenu.isOpen}
+        position={todoContextMenu.position}
+        onRename={handleTodoRename}
+        onDelete={handleTodoDelete}
+        onClose={closeTodoContextMenu}
       />
 
       {/* Confirmation Modal */}

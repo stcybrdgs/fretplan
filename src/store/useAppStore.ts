@@ -527,7 +527,88 @@ export const useAppStore = create<AppState>()(
             }
           }),
 
+        renameTodo: (
+          areaId: string,
+          taskCardId: string,
+          todoId: string,
+          newName: string,
+          areaType: AreaType
+        ) =>
+          set((state) => {
+            const targetArray =
+              areaType === 'practice' ? 'practiceAreas' : 'projects'
+            return {
+              [targetArray]: state[targetArray].map((area) =>
+                area.id === areaId
+                  ? {
+                      ...area,
+                      taskCards: area.taskCards.map((card) =>
+                        card.id === taskCardId
+                          ? {
+                              ...card,
+                              todos: card.todos.map((todo) =>
+                                todo.id === todoId
+                                  ? { ...todo, name: newName.trim() }
+                                  : todo
+                              ),
+                            }
+                          : card
+                      ),
+                    }
+                  : area
+              ),
+            }
+          }),
+
         // Delete operations
+        deleteTodo: (
+          areaId: string,
+          taskCardId: string,
+          todoId: string,
+          areaType: AreaType
+        ) =>
+          set((state) => {
+            const targetArray =
+              areaType === 'practice' ? 'practiceAreas' : 'projects'
+
+            // Clean up timers for deleted todo
+            const cleanedTimers: { [date: string]: TimerDayRecord[] } = {}
+            Object.entries(state.timers).forEach(([date, dayRecords]) => {
+              cleanedTimers[date] = dayRecords.filter(
+                (record) => record.todoId !== todoId
+              )
+            })
+
+            // Stop active timer if it belongs to the deleted todo
+            let newActiveTimer = state.activeTimer
+            if (state.activeTimer && state.activeTimer.todoId === todoId) {
+              newActiveTimer = null
+            }
+
+            return {
+              ...state,
+              [targetArray]: state[targetArray].map((area) =>
+                area.id === areaId
+                  ? {
+                      ...area,
+                      taskCards: area.taskCards.map((card) =>
+                        card.id === taskCardId
+                          ? {
+                              ...card,
+                              todos: card.todos.filter(
+                                (todo) => todo.id !== todoId
+                              ),
+                            }
+                          : card
+                      ),
+                    }
+                  : area
+              ),
+              timers: cleanedTimers,
+              activeTimer: newActiveTimer,
+            }
+          }),
+
         deletePracticeArea: (areaId: string) =>
           set((state) => {
             const updatedAreas = state.practiceAreas.filter(

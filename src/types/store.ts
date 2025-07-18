@@ -78,6 +78,21 @@ export interface AppState {
     areaType: AreaType
   ) => void
 
+  renameTodo: (
+    areaId: string,
+    taskCardId: string,
+    todoId: string,
+    newName: string,
+    areaType: AreaType
+  ) => void
+
+  deleteTodo: (
+    areaId: string,
+    taskCardId: string,
+    todoId: string,
+    areaType: AreaType
+  ) => void
+
   // Toggle actions
   toggleTodo: (
     areaId: string,

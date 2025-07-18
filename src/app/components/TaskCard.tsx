@@ -15,6 +15,7 @@ interface TaskCardProps {
   areaName: string
   areaType: AreaType
   isSelected?: boolean // prop to indicate if this card's context menu is open
+  selectedTodoId?: string | null
   isTimerActiveForTodo: (todoId: string) => boolean
   formatTime: (milliseconds: number) => string
   getDisplayTimeForTodo: (todoId: string) => number
@@ -40,10 +41,15 @@ interface TaskCardProps {
     areaId: string,
     areaType: AreaType
   ) => void
+  onOpenTodoContextMenu: (
+    e: React.MouseEvent,
+    todoId: string,
+    todoName: string
+  ) => void
   editingAreaId: string | null
   editingName: string
   setEditingName: (name: string) => void
-  onFinishRename: (id: string, itemType: 'task-card') => void
+  onFinishRename: (id: string, itemType: 'task-card' | 'todo') => void
   onCancelRename: () => void
 }
 
@@ -53,6 +59,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   areaName,
   areaType,
   isSelected = false, // Default to false
+  selectedTodoId,
   isTimerActiveForTodo,
   formatTime,
   getDisplayTimeForTodo,
@@ -62,6 +69,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   onStartTimer,
   onStopTimer,
   onOpenContextMenu,
+  onOpenTodoContextMenu,
   editingAreaId,
   editingName,
   setEditingName,
@@ -78,7 +86,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
     >
       {/* Task Card Header */}
       <div
-        // className={`p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between transition-all duration-200 ease-in-out ${
         className={`p-4 cursor-pointer flex items-center justify-between transition-all duration-200 ease-in-out ${
           card.isExpanded
             ? 'border-b border-gray-200 dark:border-gray-700 rounded-t-lg'
@@ -119,14 +126,14 @@ const TaskCard: React.FC<TaskCardProps> = ({
               onFocus={(e) => e.target.select()}
             />
           ) : (
-            <ScrollableText>
-              <h3 className='text-lg font-medium text-gray-900 dark:text-white transition-colors duration-200'>
+            <ScrollableText className='flex-shrink-0 cursor-pointer'>
+              <span className='text-lg font-medium text-gray-900 dark:text-white transition-colors duration-200'>
                 {card.name}
-              </h3>
+              </span>
             </ScrollableText>
           )}
         </div>
-        <div className='flex'>
+        <div className='flex items-center space-x-2 sm:space-x-3 flex-shrink-0'>
           {/* context menu button */}
           <button
             onClick={(e) => {
@@ -181,9 +188,12 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 className={`flex items-center space-x-3 transition-all duration-300 ease-in-out rounded-lg p-2 -mx-2 ${
                   isTimerActiveForTodo(todo.id)
                     ? 'bg-purple-50 dark:bg-purple-900/10 ring-2 ring-purple-200 dark:ring-purple-800 shadow-sm'
+                    : selectedTodoId === todo.id
+                    ? 'ring-1 ring-purple-500 dark:ring-purple-400 bg-purple-50 dark:bg-purple-900/20'
                     : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
                 }`}
               >
+                {/* checkbox */}
                 <input
                   type='checkbox'
                   checked={todo.completed}
@@ -199,17 +209,37 @@ const TaskCard: React.FC<TaskCardProps> = ({
 
                 {/* Todo content with timer */}
                 <div className='flex-1 flex items-center justify-between min-w-0'>
-                  <ScrollableText className='flex-shrink-0 cursor-pointer'>
-                    <span
-                      className={`transition-all duration-300 ${
-                        todo.completed
-                          ? 'text-gray-500 dark:text-gray-400 line-through'
-                          : 'text-gray-900 dark:text-white'
-                      }`}
-                    >
-                      {todo.name}
-                    </span>
-                  </ScrollableText>
+                  {/* Todo name with inline editing */}
+                  {editingAreaId === todo.id ? (
+                    <input
+                      type='text'
+                      value={editingName}
+                      onChange={(e) => setEditingName(e.target.value)}
+                      onBlur={() => onFinishRename(todo.id, 'todo')}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          onFinishRename(todo.id, 'todo')
+                        } else if (e.key === 'Escape') {
+                          onCancelRename()
+                        }
+                      }}
+                      className='flex-1 bg-transparent border-b border-purple-500 outline-none text-gray-900 dark:text-white text-md'
+                      autoFocus
+                      onFocus={(e) => e.target.select()}
+                    />
+                  ) : (
+                    <ScrollableText className='flex-shrink-0 cursor-pointer'>
+                      <span
+                        className={`transition-all duration-300 ${
+                          todo.completed
+                            ? 'text-gray-500 dark:text-gray-400 line-through'
+                            : 'text-gray-900 dark:text-white'
+                        }`}
+                      >
+                        {todo.name}
+                      </span>
+                    </ScrollableText>
+                  )}
 
                   {/* Timer display and controls */}
                   <div className='flex items-center space-x-2 sm:space-x-3 flex-shrink-0'>
@@ -272,6 +302,18 @@ const TaskCard: React.FC<TaskCardProps> = ({
                           <Play className='w-4 h-4' />
                         )}
                       </div>
+                    </button>
+
+                    {/* Todo context menu button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onOpenTodoContextMenu(e, todo.id, todo.name)
+                      }}
+                      className='group text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors flex-shrink-0'
+                      title='More options'
+                    >
+                      <MoreVertical className='w-3 h-3 sm:w-4 sm:h-4 group-hover:scale-125 transition-all duration-300' />
                     </button>
                   </div>
                 </div>
