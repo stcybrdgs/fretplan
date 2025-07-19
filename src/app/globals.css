@@ -6,6 +6,10 @@ html {
   @apply dark;
 }
 
+:root {
+  --banner-height: 62px;
+}
+
 /* Custom utilities for our purple theme */
 @layer utilities {
   .bg-primary {
@@ -17,7 +21,7 @@ html {
   }
 
   .text-primary-custom {
-    color: #9333ea;
+    color: #ae56ff;
   }
 
   /* Custom scrollbar styling for text containers */

@@ -551,20 +551,20 @@ export default function Home() {
       className='bg-gray-50 dark:bg-gray-900 transition-colors duration-300 flex flex-col'
       style={{ height: viewportHeight }}
     >
-      {/* Top Navigation */}
-      <nav className='bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 fixed w-full top-0 z-50'>
-        <div className='flex items-center justify-between max-w-7xl mx-auto'>
+      {/* Banner / Top Navigation */}
+      <nav className='bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 fixed w-full top-0 h-[var(--banner-height)] z-50'>
+        <div className='flex justify-between h-[var(--banner-height)] max-w-7xl mx-auto'>
           {/* Logo & Sidebar Toggle */}
-          <div className='flex items-center space-x-3'>
+          <div className='flex items-center space-x-2'>
             <button
               onClick={toggleSidebar}
-              className='w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white hover:bg-primary-hover transition-colors md:hidden'
+              className='w-7 h-7 bg-primary rounded-lg flex items-center justify-center text-white hover:bg-primary-hover transition-colors md:hidden'
             >
               <Menu className='w-4 h-4' />
             </button>
 
             {/* Logo and Brand */}
-            <div className='flex items-center space-x-2'>
+            <div className='flex space-x-2'>
               <h1 className='text-xl font-semibold text-primary-custom'>
                 FretTime
               </h1>
@@ -572,8 +572,8 @@ export default function Home() {
               <Image
                 src='/logo.svg'
                 alt='FretTime Logo'
-                width={44}
-                height={44}
+                width={38}
+                height={38}
                 className='hidden sm:block'
                 priority // Since it's above the fold
               />
@@ -610,7 +610,7 @@ export default function Home() {
           </div>
         </div>
       </nav>
-      <div className='flex flex-1'>
+      <div className='flex flex-1 relative top-[var(--banner-height)]'>
         {/* Sidebar */}
         <Sidebar
           isSidebarOpen={isSidebarOpen}
@@ -646,7 +646,7 @@ export default function Home() {
         />
 
         {/* Main Content */}
-        <main className='flex-1 md:ml-64 relative top-[3rem]'>
+        <main className='flex-1 md:ml-64'>
           <div
             className='overflow-y-auto p-6 bg-gray-50 dark:bg-gray-900'
             style={{

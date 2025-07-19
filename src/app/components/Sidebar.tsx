@@ -133,7 +133,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               key={area.id}
               className={`flex items-center justify-between w-full transition-all duration-200 rounded-lg ${
                 selectedSidebarItemId === area.id
-                  ? 'ring-1 ring-purple-500 dark:ring-purple-400 bg-purple-50 dark:bg-purple-900/20 shadow-sm'
+                  ? 'ring-1 ring-purple-500 dark:ring-purple-400 bg-purple-50 dark:bg-purple-900/30 shadow-sm'
                   : ''
               }`}
             >
@@ -141,7 +141,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 onClick={() => onSetActivePracticeArea(area.id)}
                 className={`flex items-center space-x-3 flex-1 min-w-0 text-left p-2 rounded-lg cursor-pointer transition-colors ${
                   activePracticeAreaId === area.id
-                    ? 'bg-purple-500/20 hover:bg-purple-500/20 dark:bg-purple-500/30 dark:hover:bg-purple-500/30 text-gray-900 dark:text-white'
+                    ? 'bg-purple-500/30 hover:bg-purple-500/30 text-gray-900 dark:text-white'
                     : selectedSidebarItemId === area.id
                     ? 'bg-transparent text-gray-900 dark:text-white'
                     : 'text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'
@@ -235,7 +235,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               key={project.id}
               className={`flex items-center justify-between w-full transition-all duration-200 rounded-lg ${
                 selectedSidebarItemId === project.id
-                  ? 'ring-1 ring-purple-500 dark:ring-purple-400 bg-purple-50 dark:bg-purple-900/20 shadow-sm'
+                  ? 'ring-1 ring-purple-500 dark:ring-purple-400 bg-purple-50 dark:bg-purple-900/30 shadow-sm'
                   : ''
               }`}
             >
@@ -243,7 +243,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 onClick={() => onSetActiveProject(project.id)}
                 className={`flex items-center space-x-3 flex-1 min-w-0 text-left p-2 rounded-lg cursor-pointer transition-colors ${
                   activeProjectId === project.id
-                    ? 'bg-purple-500/20 hover:bg-purple-500/20 dark:bg-purple-500/30 dark:hover:bg-purple-500/30 text-gray-900 dark:text-white'
+                    ? 'bg-purple-500/30 hover:bg-purple-500/30 text-gray-900 dark:text-white'
                     : selectedSidebarItemId === project.id
                     ? 'bg-transparent text-gray-900 dark:text-white'
                     : 'text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'
