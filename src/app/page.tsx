@@ -610,8 +610,7 @@ export default function Home() {
           </div>
         </div>
       </nav>
-      {/* rem: 4rem = 64px for nav height */}
-      <div className='flex flex-1' style={{ paddingTop: '4rem' }}>
+      <div className='flex flex-1'>
         {/* Sidebar */}
         <Sidebar
           isSidebarOpen={isSidebarOpen}
