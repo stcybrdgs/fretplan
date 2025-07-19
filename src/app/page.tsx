@@ -23,6 +23,7 @@ import { useStoreHydration } from '@/store/useAppStore'
 import { getLocalDateString } from '@/utils/dateUtils'
 import Image from 'next/image'
 import { GlobalTimerBar } from '@/app/components/GlobalTimerBar'
+import ScrollableText from '@/app/components/ScrollableText'
 // import DigitalClock from '@/app/components/DigitalClock' // test-only clock component
 
 const useViewportHeight = () => {
@@ -661,10 +662,12 @@ export default function Home() {
                 activeArea && (
                   <>
                     {/* Page Header */}
-                    <div className='mb-6'>
-                      <h2 className='text-2xl font-bold text-gray-900 dark:text-white mb-2'>
-                        {activeArea.name}
-                      </h2>
+                    <div className='flex-1 mb-6 flex items-center justify-between min-w-0'>
+                      <ScrollableText className='flex-1 cursor-pointer'>
+                        <h2 className='text-2xl font-bold text-gray-900 dark:text-white mb-2'>
+                          {activeArea.name}
+                        </h2>
+                      </ScrollableText>
                     </div>
 
                     {/* Add New Card Button */}
