@@ -22,6 +22,7 @@ import { ContactModal } from '@/app/components/modals/ContactModal'
 import { useStoreHydration } from '@/store/useAppStore'
 import { getLocalDateString } from '@/utils/dateUtils'
 import Image from 'next/image'
+import { GlobalTimerBar } from '@/app/components/GlobalTimerBar'
 // import DigitalClock from '@/app/components/DigitalClock' // test-only clock component
 
 const useViewportHeight = () => {
@@ -215,6 +216,37 @@ export default function Home() {
     }
 
     closeColorPicker()
+  }
+
+  // Handler for active timer
+  const handleGoToActiveTimer = () => {
+    if (!activeTimer) return
+
+    // Navigate to the area containing the active timer
+    if (activeTimer.areaType === 'practice') {
+      setActivePracticeArea(activeTimer.areaId)
+    } else {
+      setActiveProject(activeTimer.areaId)
+    }
+
+    // Expand the task card containing the active timer
+    const targetArea =
+      activeTimer.areaType === 'practice'
+        ? practiceAreas.find((area) => area.id === activeTimer.areaId)
+        : projects.find((project) => project.id === activeTimer.areaId)
+
+    if (targetArea) {
+      const taskCard = targetArea.taskCards.find(
+        (card) => card.id === activeTimer.taskCardId
+      )
+      if (taskCard && !taskCard.isExpanded) {
+        toggleTaskCard(
+          activeTimer.areaId,
+          activeTimer.taskCardId,
+          activeTimer.areaType
+        )
+      }
+    }
   }
 
   // Handlers for rename operations
@@ -578,10 +610,8 @@ export default function Home() {
           </div>
         </div>
       </nav>
-      {/* <div className='flex pt-16'> */}
+      {/* rem: 4rem = 64px for nav height */}
       <div className='flex flex-1' style={{ paddingTop: '4rem' }}>
-        {' '}
-        {/* rem: 4rem = 64px for nav height */}
         {/* Sidebar */}
         <Sidebar
           isSidebarOpen={isSidebarOpen}
@@ -603,6 +633,19 @@ export default function Home() {
           onFinishRename={handleFinishRename}
           onCancelRename={handleCancelRename}
         />
+
+        {/* Global Timer Bar - slides down when active */}
+        <GlobalTimerBar
+          activeTimer={activeTimer}
+          currentTime={
+            activeTimer
+              ? formatTime(getDisplayTimeForTodo(activeTimer.todoId))
+              : '00:00:00'
+          }
+          onStopTimer={handleStopTimer}
+          onGoToTimer={handleGoToActiveTimer}
+        />
+
         {/* Main Content */}
         <main className='flex-1 md:ml-64'>
           <div
