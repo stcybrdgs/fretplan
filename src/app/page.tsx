@@ -646,12 +646,12 @@ export default function Home() {
         />
 
         {/* Main Content */}
-        <main className='flex-1 md:ml-64'>
+        <main className='flex-1 md:ml-64 relative top-[3rem]'>
           <div
             className='overflow-y-auto p-6 bg-gray-50 dark:bg-gray-900'
             style={{
-              height: `calc(${viewportHeight} - 4rem)`, // Subtract nav height
-              maxHeight: `calc(${viewportHeight} - 4rem)`,
+              height: `calc(${viewportHeight})`, // Subtract nav height if needed
+              maxHeight: `calc(${viewportHeight})`,
             }}
           >
             <div className='max-w-4xl mx-auto'>
