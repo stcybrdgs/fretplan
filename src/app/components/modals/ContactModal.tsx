@@ -179,7 +179,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
         <div className='flex items-center space-x-2 text-gray-600 dark:text-gray-400'>
           <Mail className='w-4 h-4' />
           <span className='text-sm'>
-            Send me a message and I&apos;ll get back to you soon!
+            Send a message, and I&apos;ll get back to you soon!
           </span>
         </div>
       </div>
@@ -286,7 +286,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                 ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
                 : 'border-gray-300 dark:border-gray-600 focus:ring-purple-500 focus:border-purple-500'
             }`}
-            placeholder='Tell me about your project, question, or just say hi!'
+            placeholder='Leave a comment or question, or just say hi!'
           />
           {errors.message && (
             <p className='mt-1 text-sm text-red-600 dark:text-red-400'>

@@ -242,7 +242,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                   )}
 
                   {/* Timer display and controls */}
-                  <div className='flex items-center ml-6 space-x-2 sm:space-x-3 flex-shrink-0'>
+                  <div className='relative top-[2px] flex items-center ml-6 space-x-2 sm:space-x-3 flex-shrink-0'>
                     {/* Timer display - show time if this todo has active timer, grayed out if completed */}
                     <span
                       className={`font-mono text-xs sm:text-sm transition-all duration-300 ${

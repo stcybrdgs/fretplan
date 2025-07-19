@@ -49,7 +49,7 @@ export const GlobalTimerBar: React.FC<GlobalTimerBarProps> = ({
           {/* Go To Button */}
           <button
             onClick={onGoToTimer}
-            className='flex items-center space-x-1 px-2 py-2 bg-red-400 hover:bg-red-500 dark:bg-red-400 dark:hover:bg-red-500 rounded-md transition-colors text-sm font-medium'
+            className='flex items-center space-x-1 px-2 py-2 bg-red-400 hover:bg-red-500 rounded-md transition-colors text-sm font-medium'
             title='Go to active timer'
           >
             <ArrowRight className='w-4 h-4' />
@@ -59,7 +59,7 @@ export const GlobalTimerBar: React.FC<GlobalTimerBarProps> = ({
           {/* Stop Button */}
           <button
             onClick={onStopTimer}
-            className='flex items-center space-x-1 px-2 py-2 bg-white text-red-400 hover:text-red-500 hover:bg-gray-100 rounded-md transition-colors text-sm font-medium'
+            className='flex items-center space-x-1 px-2 py-2 bg-white text-red-400 hover:bg-gray-200 hover:text-red-500 rounded-md transition-colors text-sm font-medium'
             title='Stop timer'
           >
             <Square className='w-4 h-4' />
