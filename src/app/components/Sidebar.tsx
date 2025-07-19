@@ -165,7 +165,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                         onCancelRename()
                       }
                     }}
-                    className='flex-1 bg-transparent border-b border-purple-500 outline-none text-gray-900 dark:text-white'
+                    className='flex-1 w-20 bg-transparent border-b border-purple-500 outline-none text-gray-900 dark:text-white'
                     autoFocus
                     onFocus={(e) => e.target.select()}
                   />
@@ -267,7 +267,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                         onCancelRename()
                       }
                     }}
-                    className='flex-1 bg-transparent border-b border-purple-500 outline-none text-gray-900 dark:text-white'
+                    className='flex-1 w-20 bg-transparent border-b border-purple-500 outline-none text-gray-900 dark:text-white'
                     autoFocus
                     onFocus={(e) => e.target.select()}
                   />

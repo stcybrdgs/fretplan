@@ -610,6 +610,7 @@ export default function Home() {
           </div>
         </div>
       </nav>
+      {/* Content Wrapper - Sidebar + Main Content */}
       <div className='flex flex-1 relative top-[var(--banner-height)]'>
         {/* Sidebar */}
         <Sidebar
