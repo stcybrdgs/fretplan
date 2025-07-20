@@ -56,12 +56,12 @@ const Sidebar: React.FC<SidebarProps> = ({
   const [isProjectsExpanded, setIsProjectsExpanded] = useState(true)
   return (
     <aside
-      className={`w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 h-screen fixed left-0 transform transition-transform duration-300 ease-in-out z-40 ${
+      className={`w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 h-screen fixed left-0 transform transition-transform duration-300 ease-in-out z-40 overflow-y-auto touch-pan-y overscroll-contain ${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
       } xl:translate-x-0 flex flex-col`}
     >
       {/* Single scrollable container for all content */}
-      <div className='flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent pb-20'>
+      <div className='flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent pb-48'>
         {/* Practice Areas Section */}
         <div className='p-4'>
           <div
