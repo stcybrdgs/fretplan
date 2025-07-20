@@ -496,9 +496,13 @@ export const useAppStore = create<AppState>()(
             // Clean up timers for deleted todo
             const cleanedTimers: { [date: string]: TimerDayRecord[] } = {}
             Object.entries(state.timers).forEach(([date, dayRecords]) => {
-              cleanedTimers[date] = dayRecords.filter(
+              const filteredRecords = dayRecords.filter(
                 (record) => record.todoId !== todoId
               )
+              // Only keep the date if it has remaining records
+              if (filteredRecords.length > 0) {
+                cleanedTimers[date] = filteredRecords
+              }
             })
 
             // Stop active timer if it belongs to the deleted todo
