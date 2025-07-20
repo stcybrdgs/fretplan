@@ -3,11 +3,13 @@ import React from 'react'
 interface ScrollableTextProps {
   children: React.ReactNode
   className?: string
+  onClick?: () => void
 }
 
 const ScrollableText: React.FC<ScrollableTextProps> = ({
   children,
   className = '',
+  onClick,
 }) => {
   return (
     <div
@@ -21,6 +23,7 @@ const ScrollableText: React.FC<ScrollableTextProps> = ({
         scrollbarColor:
           '#9CA3AF transparent' /* Firefox - thumb and track colors */,
       }}
+      onClick={onClick}
     >
       {children}
     </div>

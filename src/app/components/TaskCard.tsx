@@ -228,7 +228,15 @@ const TaskCard: React.FC<TaskCardProps> = ({
                       onFocus={(e) => e.target.select()}
                     />
                   ) : (
-                    <ScrollableText className='flex-1 cursor-pointer'>
+                    <ScrollableText
+                      className='flex-1 cursor-pointer'
+                      onClick={() => {
+                        if (!todo.completed && isTimerActiveForTodo(todo.id)) {
+                          onStopTimer()
+                        }
+                        onToggleTodo(todo.id)
+                      }}
+                    >
                       <span
                         className={`transition-all duration-75 ${
                           todo.completed
