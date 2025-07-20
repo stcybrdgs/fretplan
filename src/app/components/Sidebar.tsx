@@ -14,6 +14,7 @@ interface SidebarProps {
   selectedSidebarItemId: string | null
   editingAreaId: string | null
   editingName: string
+  setSidebarOpen: (isOpen: boolean) => void
   setEditingName: (name: string) => void
   onSetActivePracticeArea: (id: string) => void
   onSetActiveProject: (id: string) => void
@@ -42,6 +43,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   editingAreaId,
   editingName,
   setEditingName,
+  setSidebarOpen,
   onSetActivePracticeArea,
   onSetActiveProject,
   onSetActiveView,
@@ -104,7 +106,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                   className={`flex items-center justify-between w-full transition-all duration-150 ease-out rounded-lg`}
                 >
                   <div
-                    onClick={() => onSetActivePracticeArea(area.id)}
+                    onClick={() => {
+                      onSetActivePracticeArea(area.id)
+                      setSidebarOpen(false)
+                    }}
                     className={`flex items-center space-x-3 flex-1 min-w-0 text-left p-2 rounded-lg cursor-pointer transition-all duration-150 ease-out border ${
                       selectedSidebarItemId === area.id
                         ? 'bg-purple-50 dark:bg-purple-900/30 text-gray-900 dark:text-white border-purple-400 dark:border-purple-500 shadow-sm'
@@ -205,7 +210,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                   className={`flex items-center justify-between w-full transition-all duration-150 ease-out rounded-lg`}
                 >
                   <div
-                    onClick={() => onSetActiveProject(project.id)}
+                    onClick={() => {
+                      onSetActiveProject(project.id)
+                      setSidebarOpen(false)
+                    }}
                     className={`flex items-center space-x-3 flex-1 min-w-0 text-left p-2 rounded-lg cursor-pointer transition-all duration-150 ease-out border ${
                       selectedSidebarItemId === project.id
                         ? 'bg-purple-50 dark:bg-purple-900/30 text-gray-900 dark:text-white border-purple-400 dark:border-purple-500 shadow-sm'
@@ -270,7 +278,10 @@ const Sidebar: React.FC<SidebarProps> = ({
             Analyze
           </div>
           <button
-            onClick={() => onSetActiveView('dashboard')}
+            onClick={() => {
+              onSetActiveView('dashboard')
+              setSidebarOpen(false)
+            }}
             className={`flex items-center space-x-3 w-full text-left text-gray-900 dark:text-white p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
               activeView === 'dashboard'
                 ? 'bg-purple-500/20 hover:bg-purple-500/20 dark:bg-purple-500/30 dark:hover:bg-purple-500/30'
@@ -288,7 +299,10 @@ const Sidebar: React.FC<SidebarProps> = ({
             Manage
           </div>
           <button
-            onClick={() => onSetActiveView('tags')}
+            onClick={() => {
+              onSetActiveView('tags')
+              setSidebarOpen(false)
+            }}
             className={`flex items-center space-x-3 w-full text-left text-gray-900 dark:text-white p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
               activeView === 'tags'
                 ? 'bg-purple-500/20 hover:bg-purple-500/20 dark:bg-purple-500/30 dark:hover:bg-purple-500/30'

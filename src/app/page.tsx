@@ -625,6 +625,7 @@ export default function Home() {
           editingAreaId={editingAreaId}
           editingName={editingName}
           setEditingName={setEditingName}
+          setSidebarOpen={setSidebarOpen}
           onSetActivePracticeArea={setActivePracticeArea}
           onSetActiveProject={setActiveProject}
           onSetActiveView={setActiveView}
