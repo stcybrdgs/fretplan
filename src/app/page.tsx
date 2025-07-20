@@ -559,7 +559,7 @@ export default function Home() {
           <div className='flex items-center space-x-2'>
             <button
               onClick={toggleSidebar}
-              className='w-7 h-7 bg-primary rounded-lg flex items-center justify-center text-white hover:bg-primary-hover transition-colors md:hidden'
+              className='w-7 h-7 bg-primary rounded-lg flex items-center justify-center text-white hover:bg-primary-hover transition-colors xl:hidden'
             >
               <Menu className='w-4 h-4' />
             </button>
@@ -648,7 +648,7 @@ export default function Home() {
         />
 
         {/* Main Content */}
-        <main className='flex-1 md:ml-64'>
+        <main className='flex-1 xl:ml-64'>
           <div
             className='overflow-y-auto p-6 bg-gray-50 dark:bg-gray-900'
             style={{
@@ -762,7 +762,7 @@ export default function Home() {
       {/* Mobile Overlay */}
       {isSidebarOpen && (
         <div
-          className='fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden'
+          className='fixed inset-0 bg-black bg-opacity-50 z-30 xl:hidden'
           onClick={toggleSidebar}
         ></div>
       )}

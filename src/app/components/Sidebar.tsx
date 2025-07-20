@@ -58,7 +58,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     <aside
       className={`w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 h-screen fixed left-0 transform transition-transform duration-300 ease-in-out z-40 ${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      } md:translate-x-0 flex flex-col`}
+      } xl:translate-x-0 flex flex-col`}
     >
       {/* Single scrollable container for all content */}
       <div className='flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent pb-20'>
