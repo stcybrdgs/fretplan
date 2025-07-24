@@ -24,7 +24,7 @@ export const metadata: Metadata = {
       },
     ],
     locale: 'en_US',
-    type: 'website', // Changed from 'article' to 'website'
+    type: 'website',
   },
 
   // Twitter Card optimization (bonus professional touch)
@@ -53,7 +53,7 @@ export const metadata: Metadata = {
   authors: [
     {
       name: 'Stacy Bridges',
-      url: 'https://www.linkedin.com/in/stcybrdgs/', // Replace with your LinkedIn profile
+      url: 'https://www.linkedin.com/in/stcybrdgs/',
     },
   ],
 
@@ -100,7 +100,7 @@ export default function RootLayout({
               operatingSystem: 'Web Browser',
               author: {
                 '@type': 'Person',
-                name: 'Your Name', // Replace with your name
+                name: 'Stacy Bridges',
               },
               offers: {
                 '@type': 'Offer',
