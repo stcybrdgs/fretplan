@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
   // Open Graph tags for LinkedIn and other social platforms
   openGraph: {
-    title: 'FretTime - Guitar Practice Organization Made Simple',
+    title: 'FretTime | Practice Time Made Simple',
     description:
       'A modern web application designed specifically for guitarists and string musicians to organize practice routines, track progress with built-in timers, and stay motivated. Features real-time session tracking, persistent state management, and responsive design. Built with React, Next.js 14, TypeScript, and Tailwind CSS - showcasing modern full-stack development.',
     url: 'https://frettime.com',
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
         url: 'https://frettime.com/frettime-og-image.png',
         width: 1200,
         height: 630,
-        alt: 'FretTime guitar practice organization app interface showing practice areas, task cards, and timer functionality',
+        alt: 'The FretTime app interface for organizing practice time, showing practice areas, task cards, and timer functionality',
         type: 'image/png',
       },
     ],
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   // Twitter Card optimization (bonus professional touch)
   twitter: {
     card: 'summary_large_image',
-    title: 'FretTime - Guitar Practice Organization Made Simple',
+    title: 'FretTime | Practice Time Made Simple',
     description:
       'Modern guitar practice organization app built with React, Next.js, TypeScript, and Tailwind CSS. Features timers, progress tracking, and responsive design.',
     images: ['https://frettime.com/og-image.png'],
