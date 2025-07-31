@@ -5,7 +5,7 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'FretTime - Guitar Practice Organization Made Simple',
   description:
-    'A modern web application designed specifically for guitarists and string musicians to organize practice routines, track progress with built-in timers, and stay motivated. Features real-time session tracking, persistent state management, and responsive design. Built with React, Next.js 14, TypeScript, and Tailwind CSS - showcasing modern full-stack development skills.',
+    'A modern web application designed specifically for guitarists and string musicians to organize practice routines, track progress with built-in timers, and stay motivated. Features real-time session tracking, persistent state management, and responsive design. Built with React, Next.js 14, TypeScript, and Tailwind CSS - showcasing modern full-stack development.',
 
   // Open Graph tags for LinkedIn and other social platforms
   openGraph: {
@@ -32,8 +32,8 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'FretTime | Practice Time Made Simple',
     description:
-      'Modern guitar practice organization app built with React, Next.js, TypeScript, and Tailwind CSS. Features timers, progress tracking, and responsive design.',
-    images: ['https://frettime.com/og-image.png'],
+      'Modern guitar practice organization app built with React, Next.js, TypeScript, and Tailwind CSS. Features include timers, progress tracking, and responsive design.',
+    images: ['https://frettime.com/frettime-og-image.png'],
   },
 
   // SEO and discoverability
@@ -94,7 +94,7 @@ export default function RootLayout({
               '@type': 'WebApplication',
               name: 'FretTime',
               description:
-                'Guitar practice organization web application built with modern React stack',
+                'Guitar practice organization web application built with modern React stack.',
               url: 'https://frettime.com',
               applicationCategory: 'MusicApplication',
               operatingSystem: 'Web Browser',
